@@ -3,3 +3,5 @@ test_dep = [ami_dep,
               include_directories: include_directories('lib/ut/include'))]
 
 parallel_test_dep = [test_dep, dependency('threads')]
+
+subdir('src/utility')
