@@ -1,4 +1,5 @@
 subdir('utility')
+subdir('optimizer')
 
 test('node_test',
      executable('node_test', 'node.cc',
