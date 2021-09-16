@@ -4,4 +4,5 @@ test_dep = [ami_dep,
 
 parallel_test_dep = [test_dep, dependency('threads')]
 
-subdir('src/utility')
+subdir('src')
+
