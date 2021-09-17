@@ -29,8 +29,12 @@ int main() {
 
   "backward"_test =
     [&]() {
-      std::array<float, size> output{};
-      src.backward(delta, output);
+      constexpr auto output =
+        [&]() {
+          std::array<float, size> output{};
+          src.backward(delta, output);
+          return output;
+        }();
 
       expect(eq(output[0], 0.1_f));
       expect(eq(output[1], 0.01_f));
@@ -49,8 +53,12 @@ int main() {
 
   "calc_update"_test =
     [&]() {
-      std::array<float, size> output{};
-      src.calc_update(input, delta, output);
+      constexpr auto output =
+        [&]() {
+          std::array<float, size> output{};
+          src.calc_update(input, delta, output);
+          return output;
+        }();
 
       expect(eq(output[0], 0.01_f));
       expect(eq(output[1], 0.02_f));
