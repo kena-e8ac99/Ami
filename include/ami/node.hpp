@@ -9,6 +9,7 @@
 
 #include "ami/concepts/execution_policy.hpp"
 #include "ami/concepts/optimizer.hpp"
+#include "ami/utility/atomic_operaton.hpp"
 #include "ami/utility/indices.hpp"
 #include "ami/utility/parallel_algorithm.hpp"
 
@@ -39,19 +40,9 @@ namespace ami {
     static constexpr void calc_gradients(
         std::span<const real_type, size> input, real_type delta,
         std::span<real_type, size>       result) {
-      if constexpr (std::common_reference_with<
-                      decltype(P), std::execution::sequenced_policy>) {
-        std::ranges::transform(
-            input, result, result.begin(),
-            [=](auto input, auto result) { return result + (input * delta); });
-      }
-      else {
-        utility::for_each(
-            utility::indices<size>,
-            [=](auto i) {
-              std::atomic_ref<real_type>{result[i]}.fetch_add(input[i] * delta);
-            });
-      }
+      utility::for_each<P>(
+          utility::indices<size>,
+          [=](auto i) { utility::fetch_add(result[i], input[i] * delta); });
     }
 
     // Public Methods
@@ -63,19 +54,10 @@ namespace ami {
     template <execution_policy auto P = std::execution::seq>
     constexpr void backward(real_type                  delta,
                             std::span<real_type, size> result) const {
-      if constexpr (std::common_reference_with<
-                      decltype(P), std::execution::sequenced_policy>) {
-        std::ranges::transform(
-            value_, result, result.begin(),
-            [=](auto value, auto result) { return result + (value * delta); });
-      }
-      else {
-        utility::for_each<P>(
-            utility::indices<size>,
-            [=, this](auto i) {
-            std::atomic_ref<real_type>{result[i]}.fetch_add(value_[i] * delta);
-            });
-      }
+      utility::for_each<P>(
+          utility::indices<size>,
+          [=, this](auto i) {
+            utility::fetch_add(result[i], value_[i] * delta); });
     }
 
     template <execution_policy auto P = std::execution::seq,
