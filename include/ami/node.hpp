@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <atomic>
 #include <concepts>
 #include <functional>
 #include <ranges>
@@ -14,6 +15,7 @@
 namespace ami {
 
   template <std::size_t N, std::floating_point T = float>
+  requires std::atomic_ref<T>::is_always_lock_free
   class node final {
   public:
     // Public Types
@@ -39,11 +41,21 @@ namespace ami {
     }
 
     template <execution_policy auto P = std::execution::seq>
-    constexpr value_type backward(real_type delta) const {
-      value_type output{};
-      utility::transform<P>(
-          value_, output.begin(), std::bind_front(std::multiplies{}, delta));
-      return output;
+    constexpr void backward(real_type                  delta,
+                            std::span<real_type, size> result) const {
+      if constexpr (std::common_reference_with<
+                      decltype(P), std::execution::sequenced_policy>) {
+        std::ranges::transform(
+            value_, result, result.begin(),
+            [=](auto value, auto result) { return result + (value * delta); });
+      }
+      else {
+        utility::for_each<P>(
+            utility::indices<size>,
+            [=, this](auto i) {
+            std::atomic_ref<real_type>{result[i]}.fetch_add(value_[i] * delta);
+            });
+      }
     }
 
     template <execution_policy auto P = std::execution::seq,

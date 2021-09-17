@@ -29,7 +29,8 @@ int main() {
 
   "backward"_test =
     [&]() {
-      constexpr auto output = src.backward(delta);
+      std::array<float, size> output{};
+      src.backward(delta, output);
 
       expect(eq(output[0], 0.1_f));
       expect(eq(output[1], 0.01_f));
@@ -38,7 +39,8 @@ int main() {
 
   "parallel_backward"_test =
     [&]() {
-      const auto output = src.backward<std::execution::par_unseq>(delta);
+      std::array<float, size> output{};
+      src.backward<std::execution::par_unseq>(delta, output);
 
       expect(eq(output[0], 0.1_f));
       expect(eq(output[1], 0.01_f));
