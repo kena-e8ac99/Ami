@@ -34,6 +34,26 @@ namespace ami {
       std::ranges::copy(value, value_.begin());
     }
 
+    // Static Methods
+    template <execution_policy auto P = std::execution::seq>
+    static constexpr void calc_update(std::span<const real_type, size> input,
+                                      real_type                        delta,
+                                      std::span<real_type, size>       result) {
+      if constexpr (std::common_reference_with<
+                      decltype(P), std::execution::sequenced_policy>) {
+        std::ranges::transform(
+            input, result, result.begin(),
+            [=](auto input, auto result) { return result + (input * delta); });
+      }
+      else {
+        utility::for_each(
+            utility::indices<size>,
+            [=](auto i) {
+              std::atomic_ref<real_type>{result[i]}.fetch_add(input[i] * delta);
+            });
+      }
+    }
+
     // Public Methods
     template <execution_policy auto P = std::execution::seq>
     constexpr real_type forward(std::span<const real_type, size> input) const {

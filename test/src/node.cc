@@ -47,6 +47,26 @@ int main() {
       expect(eq(output[2], 0.001_f));
     };
 
+  "calc_update"_test =
+    [&]() {
+      std::array<float, size> output{};
+      src.calc_update(input, delta, output);
+
+      expect(eq(output[0], 0.01_f));
+      expect(eq(output[1], 0.02_f));
+      expect(eq(output[2], 0.03_f));
+    };
+
+  "parallel_calc_update"_test =
+    [&]() {
+      std::array<float, size> output{};
+      src.calc_update<std::execution::par_unseq>(input, delta, output);
+
+      expect(eq(output[0], 0.01_f));
+      expect(eq(output[1], 0.02_f));
+      expect(eq(output[2], 0.03_f));
+    };
+
   constexpr auto test_optimizer =
     [](auto& weight, auto gradient) { weight += gradient; };
 
