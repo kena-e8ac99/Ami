@@ -36,9 +36,9 @@ namespace ami {
 
     // Static Methods
     template <execution_policy auto P = std::execution::seq>
-    static constexpr void calc_update(std::span<const real_type, size> input,
-                                      real_type                        delta,
-                                      std::span<real_type, size>       result) {
+    static constexpr void calc_gradients(
+        std::span<const real_type, size> input, real_type delta,
+        std::span<real_type, size>       result) {
       if constexpr (std::common_reference_with<
                       decltype(P), std::execution::sequenced_policy>) {
         std::ranges::transform(

@@ -51,12 +51,12 @@ int main() {
       expect(eq(output[2], 0.001_f));
     };
 
-  "calc_update"_test =
+  "calc_gradients"_test =
     [&]() {
       constexpr auto output =
         [&]() {
           std::array<float, size> output{};
-          src.calc_update(input, delta, output);
+          src.calc_gradients(input, delta, output);
           return output;
         }();
 
@@ -65,10 +65,10 @@ int main() {
       expect(eq(output[2], 0.03_f));
     };
 
-  "parallel_calc_update"_test =
+  "parallel_calc_gradients"_test =
     [&]() {
       std::array<float, size> output{};
-      src.calc_update<std::execution::par_unseq>(input, delta, output);
+      src.calc_gradients<std::execution::par_unseq>(input, delta, output);
 
       expect(eq(output[0], 0.01_f));
       expect(eq(output[1], 0.02_f));
