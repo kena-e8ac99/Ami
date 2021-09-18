@@ -1,4 +1,4 @@
-#include "ami/gate.hpp"
+#include "ami/perceptron.hpp"
 
 #include <boost/ut.hpp>
 
@@ -15,7 +15,7 @@ int main() {
 
   constexpr std::size_t size = 3;
 
-  constexpr ami::gate<float, test_optimizer, size>
+  constexpr ami::perceptron<float, test_optimizer, size>
     src{ami::node<size>{std::array<float, size>{1.0f, 0.1f, 0.01f}}, 1.0f};
 
   constexpr std::array<float, size> input{0.1f, 0.2f, 0.3f};

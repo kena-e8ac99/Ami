@@ -5,8 +5,8 @@ test('node_test',
      executable('node_test', 'node.cc',
                 dependencies: parallel_test_dep))
 
-test('gate_single_test',
-     executable('gate_single_test', 'gate_single.cc',
+test('perceptron_test',
+     executable('perceptron_test', 'perceptron.cc',
                 dependencies: parallel_test_dep))
 
 test('gate_double_test',
