@@ -78,7 +78,7 @@ namespace ami {
     static constexpr void calc_gradients(
         input_type<HasInputN, HasInputNs> input, real_type delta,
         gradient_type<HasInputN, HasInputNs>& result) {
-      utility::fetch_add(result.first, delta);
+      utility::fetch_add<P>(result.first, delta);
 
       if constexpr (node_count == 1 || !HasInputNs) {
         node<N, T>::template calc_gradients<P>(

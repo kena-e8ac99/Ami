@@ -42,7 +42,7 @@ namespace ami {
         std::span<real_type, size>       result) {
       utility::for_each<P>(
           utility::indices<size>,
-          [=](auto i) { utility::fetch_add(result[i], input[i] * delta); });
+          [=](auto i) { utility::fetch_add<P>(result[i], input[i] * delta); });
     }
 
     // Public Methods
@@ -57,7 +57,7 @@ namespace ami {
       utility::for_each<P>(
           utility::indices<size>,
           [=, this](auto i) {
-            utility::fetch_add(result[i], value_[i] * delta); });
+            utility::fetch_add<P>(result[i], value_[i] * delta); });
     }
 
     template <execution_policy auto P = std::execution::seq,
