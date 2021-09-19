@@ -38,7 +38,11 @@ namespace ami {
         std::conditional_t<
           HasInputN,
           std::tuple<std::array<T, N>, std::array<T, Ns>...>,
-          std::tuple<std::array<T, Ns>...>>>;
+          std::conditional_t<
+            node_count == 2,
+            std::tuple_element_t<node_count - 1,
+              std::tuple<std::array<T, N>, std::array<T, Ns>...>>,
+            std::tuple<std::array<T, Ns>...>>>>;
 
     template <bool HasInputN = true, bool HasInputNs = true>
     using gradient_type = std::pair<T, backward_type<HasInputN, HasInputNs>>;
@@ -110,8 +114,9 @@ namespace ami {
         T delta, backward_type<HasInputN, HasInputNs>& result) const {
       if constexpr (node_count == 1 || !HasInputNs) {
         get_node().template backward<P>(delta, result);
-      }
-      else {
+      } else if constexpr (node_count == 2 && !HasInputN) {
+        get_node<1>().template backward<P>(delta, result);
+      } else {
         constexpr auto i = static_cast<std::size_t>(!HasInputN);
 
         [&, delta]<std::size_t... I>(std::index_sequence<I...>) {

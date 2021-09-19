@@ -96,11 +96,9 @@ int main() {
           return output;
         }();
 
-      const auto& value = std::get<0>(output);
-
-      expect(eq(value[0], 0.01_f));
-      expect(eq(value[1], 0.02_f));
-      expect(eq(value[2], 0.03_f));
+      expect(eq(output[0], 0.01_f));
+      expect(eq(output[1], 0.02_f));
+      expect(eq(output[2], 0.03_f));
     };
 
   "parallel_backward_all"_test =
@@ -145,11 +143,9 @@ int main() {
           return output;
         }();
 
-      const auto& value = std::get<0>(output);
-
-      expect(eq(value[0], 0.01_f));
-      expect(eq(value[1], 0.02_f));
-      expect(eq(value[2], 0.03_f));
+      expect(eq(output[0], 0.01_f));
+      expect(eq(output[1], 0.02_f));
+      expect(eq(output[2], 0.03_f));
     };
 
   "calc_gradients_all"_test =
