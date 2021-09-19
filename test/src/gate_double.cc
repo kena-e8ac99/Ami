@@ -17,7 +17,7 @@ int main() {
 
   constexpr std::size_t size1 = 4;
 
-  constexpr ami::gate<float, test_optimizer, size0, size1>
+  constexpr ami::gate<float, size0, size1>
     src{std::tuple{ami::node<size0>{std::array<float, size0>{1.0f, 2.0f, 3.0f}},
                    ami::node<size1>{std::array<float, size1>{0.1f, 0.2f, 0.3f}}}, 1.0f};
 
@@ -228,16 +228,16 @@ int main() {
       expect(eq(value[2], 0.3_f));
     };
 
-  type::optimizer_type optimizers{};
+  type::optimizer_type<test_optimizer> optimizers{};
 
   "update"_test =
     [&, src = ami::gate(src)]() mutable {
-      src.update(optimizers, type::gradient_type<>{});
+      src.update<seq, test_optimizer>(optimizers, type::gradient_type<>{});
     };
 
   "parallel_update"_test =
     [&, src = ami::gate(src)]() mutable {
-      src.update<par_unseq>(optimizers, type::gradient_type<>{});
+      src.update<par_unseq, test_optimizer>(optimizers, type::gradient_type<>{});
     };
 }
 

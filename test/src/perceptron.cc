@@ -15,12 +15,14 @@ int main() {
 
   constexpr std::size_t size = 3;
 
-  constexpr ami::perceptron<float, test_optimizer, size>
+  constexpr ami::perceptron<float, size>
     src{ami::node<size>{std::array<float, size>{1.0f, 0.1f, 0.01f}}, 1.0f};
 
   constexpr std::array<float, size> input{0.1f, 0.2f, 0.3f};
 
   constexpr float delta = 0.1f;
+
+  using type = std::remove_cvref_t<decltype(src)>;
 
   "forward"_test =
     [&]() {
@@ -94,11 +96,12 @@ int main() {
       expect(eq(output.second[2], 0.03_f));
     };
 
-  std::pair<test_optimizer, std::array<test_optimizer, size>> optimizers{};
+  type::optimizer_type<test_optimizer> optimizers{};
 
   "update"_test =
     [&, src = ami::gate(src)]() mutable {
-      src.update(optimizers, std::pair{0.1f, input});
+      src.update<std::execution::seq, test_optimizer>(
+          optimizers, std::pair{0.1f, input});
 
       const auto output = src.get_node().value();
 
@@ -109,7 +112,7 @@ int main() {
 
   "parallel_update"_test =
     [&, src = ami::gate(src)]() mutable {
-      src.update<policy>(optimizers, std::pair{0.1f, input});
+      src.update<policy, test_optimizer>(optimizers, std::pair{0.1f, input});
 
       const auto output = src.get_node().value();
 

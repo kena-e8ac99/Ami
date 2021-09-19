@@ -11,8 +11,7 @@
 
 namespace ami {
 
-  template <std::floating_point T, optimizer<T> O,
-            std::size_t N, std::size_t... Ns>
+  template <std::floating_point T, std::size_t N, std::size_t... Ns>
   class gate final {
   public:
     // Static Members
@@ -47,6 +46,7 @@ namespace ami {
     template <bool HasInputN = true, bool HasInputNs = true>
     using gradient_type = std::pair<T, backward_type<HasInputN, HasInputNs>>;
 
+    template <optimizer<T> O>
     using optimizer_type = std::conditional_t<
       sizeof...(Ns) == 0, std::pair<O, std::array<O, N>>,
       std::pair<O, std::tuple<std::array<O, N>, std::array<O, Ns>...>>>;
@@ -126,9 +126,10 @@ namespace ami {
       }
     }
 
-    template <execution_policy auto P = std::execution::seq, bool X = true>
+    template <execution_policy auto P = std::execution::seq,
+              optimizer<T> O, bool X = true>
     requires X
-    constexpr void update(optimizer_type&            optimizers,
+    constexpr void update(optimizer_type<O>&            optimizers,
                           const gradient_type<X, X>& gradients) {
       optimizers.first(bias_, gradients.first);
 

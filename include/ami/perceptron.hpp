@@ -4,6 +4,6 @@
 
 namespace ami {
 
-  template <std::floating_point T, optimizer<T> O, std::size_t N>
-  using perceptron = gate<T, O, N>;
+  template <std::floating_point T, std::size_t N>
+  using perceptron = gate<T, N>;
 }
