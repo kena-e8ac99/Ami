@@ -53,12 +53,14 @@ namespace ami {
 
     // Static Methods
     template <execution_policy auto P = std::execution::seq>
-    static constexpr void calc_gradients(input_type input, real_type delta,
-                                         gradient_type& gradient) {
+    static constexpr void calc_gradients(input_type            input,
+                                         std::span<const T, M> delta,
+                                         gradient_type&        gradient) {
       utility::for_each<P>(
-          gradient,
-          [input, delta](auto& gradient) {
-            value_type::template calc_gradients<P>(input, delta, gradient);
+          utility::indices<M>,
+          [&, input, delta](auto i) {
+            value_type::template calc_gradients<P>(
+                input, delta[i], gradient[i]);
           });
     }
 
@@ -73,12 +75,12 @@ namespace ami {
     }
 
     template <execution_policy auto P = std::execution::seq>
-    constexpr backward_type backward(real_type delta) const {
+    constexpr backward_type backward(std::span<const T, M> delta) const {
       backward_type output{};
       utility::for_each<P>(
-          values_,
-          [&, delta](const auto& value) {
-            value.template backward<P>(delta, output); });
+          utility::indices<M>,
+          [&, delta](auto i) {
+            values_[i].template backward<P>(delta[i], output); });
       return output;
     }
 
