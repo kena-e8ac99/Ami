@@ -11,7 +11,9 @@ int main () {
 
   const auto output1 = src.forward<par_unseq>(std::array<float, 3>{});
 
-  constexpr auto backward = src.backward(1.0f);
+  constexpr std::array<float, 4> delta{};
 
-  const auto backward1 = src.backward<par_unseq>(1.0f);
+  constexpr auto backward = src.backward(delta);
+
+  const auto backward1 = src.backward<par_unseq>(delta);
 }
