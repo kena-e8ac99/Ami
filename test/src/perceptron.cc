@@ -15,8 +15,8 @@ int main() {
 
   constexpr std::size_t size = 3;
 
-  constexpr ami::perceptron<float, size>
-    src{ami::node<size>{std::array<float, size>{1.0f, 0.1f, 0.01f}}, 1.0f};
+  constexpr ami::perceptron<size, float>
+    src{{1.0f, ami::node<size>{std::array<float, size>{1.0f, 0.1f, 0.01f}}}};
 
   constexpr std::array<float, size> input{0.1f, 0.2f, 0.3f};
 
@@ -99,7 +99,7 @@ int main() {
   type::optimizer_type<test_optimizer> optimizers{};
 
   "update"_test =
-    [&, src = ami::gate(src)]() mutable {
+    [&, src = ami::perceptron(src)]() mutable {
       src.update<std::execution::seq, test_optimizer>(
           optimizers, std::pair{0.1f, input});
 
@@ -111,7 +111,7 @@ int main() {
     };
 
   "parallel_update"_test =
-    [&, src = ami::gate(src)]() mutable {
+    [&, src = ami::perceptron(src)]() mutable {
       src.update<policy, test_optimizer>(optimizers, std::pair{0.1f, input});
 
       const auto output = src.get_node().value();

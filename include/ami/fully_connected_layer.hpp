@@ -9,25 +9,22 @@
 
 namespace ami {
 
-  template <class T, std::size_t N>
-  class fully_connected_layer;
-
-  template <class T, std::size_t N, std::size_t M>
-  class fully_connected_layer<perceptron<T, N>, M> final {
+  template <std::size_t N, std::size_t M, std::floating_point T = float>
+  class fully_connected_layer final {
   public:
     // Public Types
     using size_type = std::size_t;
 
-    using value_type = perceptron<T, N>;
+    using value_type = perceptron<N, T>;
 
     using real_type = typename value_type::real_type;
 
     using forward_type = std::array<real_type, M>;
 
-    using backward_type = typename value_type::template backward_type<>;
+    using backward_type = typename value_type::backward_type;
 
     using gradient_type =
-      std::array<typename value_type::template gradient_type<>, M>;
+      std::array<typename value_type::gradient_type, M>;
 
     template <optimizer<T> O>
     using optimizer_type =

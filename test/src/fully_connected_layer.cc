@@ -5,7 +5,7 @@
 int main () {
   using namespace std::execution;
 
-  constexpr ami::fully_connected_layer<ami::perceptron<float, 3>, 4> src{};
+  constexpr ami::fully_connected_layer<3, 4, float> src{};
 
   constexpr auto output = src.forward(std::array<float, 3>{});
 
