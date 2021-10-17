@@ -78,4 +78,31 @@ namespace ami::utility {
                std::ranges::begin(r2), std::move(init));
     }
   }
+
+  template <execution_policy auto P = std::execution::seq,
+            std::ranges::forward_range R1, std::ranges::forward_range R2,
+            typename T, std::copy_constructible F1, std::copy_constructible F2>
+  requires std::common_with<T,
+             std::invoke_result_t<F1, std::ranges::range_value_t<R1>,
+                                  std::ranges::range_value_t<R2>>> &&
+           std::common_with<T,
+             std::invoke_result_t<F2, std::ranges::range_value_t<R1>,
+                                  std::ranges::range_value_t<R2>>>
+  inline constexpr T transform_reduce(R1&& r1, R2&& r2, T init, F1 f1, F2 f2) {
+    if constexpr (std::common_reference_with<
+                    decltype(P), std::execution::sequenced_policy>) {
+      return
+        std::transform_reduce(
+            std::ranges::begin(r1), std::ranges::end(r2),
+            std::ranges::begin(r2), std::move(init), std::move(f1),
+            std::move(f2));
+    }
+    else {
+      return
+        std::transform_reduce(
+            P, std::ranges::begin(r1), std::ranges::end(r1),
+            std::ranges::begin(r2), std::move(init), std::move(f1),
+            std::move(f2));
+    }
+  }
 }
