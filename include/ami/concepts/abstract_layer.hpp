@@ -10,8 +10,9 @@ namespace ami {
   template <class T>
   struct is_abstract_layer final : public std::false_type {};
 
-  template <std::floating_point T, activation_function<T> F>
-  struct is_abstract_layer<activation_layer<T, F>> final
+  template <std::size_t N, class F, std::floating_point T>
+  requires activation_function<F, T>
+  struct is_abstract_layer<activation_layer<N, F, T>> final
   : public std::true_type {};
 
   template <class T>
