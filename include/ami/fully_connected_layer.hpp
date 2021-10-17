@@ -30,10 +30,7 @@ namespace ami {
     using optimizer_type =
       std::array<typename value_type::template optimizer_type<O>, M>;
 
-    // Private Types
-  private:
     using input_type = std::span<const real_type, N>;
-  public:
 
     // Static Members
     static constexpr size_type output_size = M;
