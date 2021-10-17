@@ -13,8 +13,7 @@ namespace ami::utility {
             std::ranges::forward_range R,
             std::indirectly_unary_invocable<std::ranges::iterator_t<R>> F>
   inline constexpr void for_each(R&& r, F f) {
-    if constexpr (std::same_as<std::remove_cvref_t<decltype(P)>,
-                               std::execution::sequenced_policy>) {
+    if constexpr (sequenced_policy<P>) {
       std::for_each(std::ranges::begin(r), std::ranges::end(r), std::move(f));
     }
     else {
@@ -30,8 +29,7 @@ namespace ami::utility {
   requires std::indirectly_writable<O,
              std::indirect_result_t<F, std::ranges::iterator_t<R>>>
   inline constexpr O transform(R&& r, O result, F f) {
-    if constexpr (std::same_as<std::remove_cvref_t<decltype(P)>,
-                               std::execution::sequenced_policy>) {
+    if constexpr (sequenced_policy<P>) {
       return std::transform(std::ranges::begin(r), std::ranges::end(r),
                             std::move(result), std::move(f));
     }
@@ -48,8 +46,7 @@ namespace ami::utility {
              std::indirect_result_t<F, std::ranges::iterator_t<R1>,
                std::ranges::iterator_t<R2>>>
   inline constexpr O transform(R1&& r1, R2&& r2, O result, F f) {
-    if constexpr (std::same_as<std::remove_cvref_t<decltype(P)>,
-                               std::execution::sequenced_policy>) {
+    if constexpr (sequenced_policy<P>) {
       return std::transform(std::ranges::begin(r1), std::ranges::end(r1),
                             std::ranges::begin(r2), std::move(result),
                             std::move(f));
@@ -67,8 +64,7 @@ namespace ami::utility {
             std::common_with<std::ranges::range_value_t<R1>> T>
   requires std::common_with<T, std::ranges::range_value_t<R2>>
   inline constexpr T transform_reduce(R1&& r1, R2&& r2, T init) {
-    if constexpr (std::same_as<std::remove_cvref_t<decltype(P)>,
-                               std::execution::sequenced_policy>) {
+    if constexpr (sequenced_policy<P>) {
       return std::transform_reduce(std::ranges::begin(r1), std::ranges::end(r1),
                                    std::ranges::begin(r2), std::move(init));
     }
@@ -89,8 +85,7 @@ namespace ami::utility {
              std::invoke_result_t<F2, std::ranges::range_value_t<R1>,
                                   std::ranges::range_value_t<R2>>>
   inline constexpr T transform_reduce(R1&& r1, R2&& r2, T init, F1 f1, F2 f2) {
-    if constexpr (std::common_reference_with<
-                    decltype(P), std::execution::sequenced_policy>) {
+    if constexpr (sequenced_policy<P>) {
       return
         std::transform_reduce(
             std::ranges::begin(r1), std::ranges::end(r2),

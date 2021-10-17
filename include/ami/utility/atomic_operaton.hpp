@@ -12,8 +12,7 @@ namespace ami::utility {
       T& t,
       typename std::atomic_ref<T>::difference_type operand,
       [[maybe_unused]] std::memory_order order = std::memory_order_seq_cst) {
-    if constexpr (std::common_with<
-                    decltype(P), std::execution::sequenced_policy>) {
+    if constexpr (sequenced_policy<P>) {
       T temp = t;
       t += operand;
       return temp;
