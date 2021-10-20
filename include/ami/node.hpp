@@ -25,6 +25,17 @@ namespace ami {
 
     using value_type = std::array<real_type, N>;
 
+    using forward_type = real_type;
+
+    using backward_type = value_type;
+
+    using delta_type = forward_type;
+
+    using gradient_type = value_type;
+
+    template <optimizer<real_type> O>
+    using optimizer_type = std::array<O, N>;
+
     // Static Members
     static constexpr size_type size = N;
 

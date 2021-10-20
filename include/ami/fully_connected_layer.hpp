@@ -2,8 +2,8 @@
 
 #include <array>
 
+#include "ami/node.hpp"
 #include "ami/concepts/execution_policy.hpp"
-#include "ami/perceptron.hpp"
 #include "ami/utility/indices.hpp"
 #include "ami/utility/parallel_algorithm.hpp"
 
@@ -15,20 +15,24 @@ namespace ami {
     // Public Types
     using size_type = std::size_t;
 
-    using value_type = perceptron<N, T>;
+    using node_type = node<N, T>;
 
-    using real_type = typename value_type::real_type;
+    using real_type = T;
 
     using forward_type = std::array<real_type, M>;
 
-    using backward_type = typename value_type::backward_type;
+    using backward_type = typename node_type::backward_type;
+
+    using delta_type = forward_type;
 
     using gradient_type =
-      std::array<typename value_type::gradient_type, M>;
+      std::pair<std::array<typename node_type::gradient_type, M>,
+                std::array<real_type, M>>;
 
     template <optimizer<T> O>
     using optimizer_type =
-      std::array<typename value_type::template optimizer_type<O>, M>;
+      std::pair<typename node_type::template optimizer_type<O>,
+                std::array<O, M>>;
 
     using input_type = std::span<const real_type, N>;
 
@@ -41,8 +45,10 @@ namespace ami {
     fully_connected_layer() = default;
 
     explicit fully_connected_layer(
-        std::span<const value_type, output_size> values) {
+        std::span<const node_type, output_size> values,
+        std::span<const real_type, output_size> bias) {
       std::ranges::copy(values, values_.begin());
+      std::ranges::copy(bias, bias_.begin());
     }
 
     // Static Methods
@@ -53,8 +59,9 @@ namespace ami {
       utility::for_each<P>(
           utility::indices<M>,
           [&, input, delta](auto i) {
-            value_type::template calc_gradients<P>(
-                input, delta[i], gradient[i]);
+            utility::fetch_add<P>(gradient.second[i], delta[i]);
+            node_type::template calc_gradients<P>(
+                input, delta[i], gradient.first[i]);
           });
     }
 
@@ -63,8 +70,10 @@ namespace ami {
     constexpr forward_type forward(input_type input) const {
       forward_type output{};
       utility::transform<P>(
-          values_, output.begin(),
-          [=](const auto& value) { return value.template forward<P>(input); });
+          values_, bias_, output.begin(),
+          [=](const auto& value, auto bias) {
+            return value.template forward<P>(input) + bias;
+          });
       return output;
     }
 
@@ -84,13 +93,17 @@ namespace ami {
       utility::for_each<P>(
           utility::indices<output_size>,
           [&](auto i) {
-            values_[i].template update<P, O>(optimizers[i], gradients[i]); });
+            optimizers.second[i](bias_[i], gradients.second[i]);
+            values_[i].template update<P, O>(
+                optimizers.first[i], gradients.first[i]); });
     }
 
     // Getter / Setter
   private:
     // Private Members
-    std::array<value_type, output_size> values_{};
+    std::array<node_type, output_size> values_{};
+
+    std::array<real_type, output_size>  bias_{};
 
     // Private Methods
   };
