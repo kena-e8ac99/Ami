@@ -23,6 +23,13 @@ namespace ami {
 
     using backward_type = std::array<T, N>;
 
+    using delta_type = forward_type;
+
+    struct gradient_type {};
+
+    template <class O>
+    struct optimizer_type {};
+
     template <execution_policy auto P = std::execution::seq>
     static constexpr forward_type forward(input_type input) {
       forward_type output{};
@@ -39,5 +46,8 @@ namespace ami {
           [](auto delta, auto input) { return delta * F::df(input); });
       return output;
     }
+
+    template <execution_policy auto P = std::execution::seq, class O>
+    constexpr void update(optimizer_type<O>, gradient_type) const noexcept {}
   };
 }
