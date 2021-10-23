@@ -30,6 +30,10 @@ namespace ami {
     template <class O>
     struct optimizer_type {};
 
+    static constexpr size_type input_size = N;
+
+    static constexpr size_type output_size = N;
+
     template <execution_policy auto P = std::execution::seq>
     static constexpr forward_type forward(input_type input) {
       forward_type output{};
