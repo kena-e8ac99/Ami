@@ -1,11 +1,13 @@
 #pragma once
 
-#include <ranges>
-#include <type_traits>
+#include <array>
+#include <utility>
 
 namespace ami::utility {
 
-  template <std::weakly_incrementable auto N>
-  inline constexpr auto indices =
-    std::ranges::iota_view{std::remove_cvref_t<decltype(N)>{}, N};
+  template <std::size_t N>
+  inline constexpr std::array<std::size_t, N> indices =
+    []<std::size_t... I>(std::index_sequence<I...>) {
+      return std::array{I...};
+    }(std::make_index_sequence<N>{});
 }
