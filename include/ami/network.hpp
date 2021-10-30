@@ -16,6 +16,7 @@
 #include "ami/utility/atomic_operaton.hpp"
 #include "ami/utility/indices.hpp"
 #include "ami/utility/parallel_algorithm.hpp"
+#include "ami/utility/to_span.hpp"
 
 namespace ami {
 
@@ -69,13 +70,20 @@ namespace ami {
     // Static Members
     static constexpr size_type size = sizeof...(Args) + 1;
 
+    template <size_type I = 0>
+    static constexpr size_type input_size = value_type<I>::input_size;
+
+    template <size_type I = (size - 1)>
+    static constexpr size_type output_size = value_type<I>::output_size;
+
     // Constructor
 
     // Static Methods
 
     // Public Methods
     template <execution_policy auto P = std::execution::seq, size_type I = 0>
-    constexpr auto forward(input_type<I> input) const {
+    constexpr auto forward(
+        utility::to_const_span_t<input_type<I>> input) const {
       if constexpr (I == (size - 1)) {
         return value<I>().template forward<P>(input);
       } else {
@@ -84,7 +92,8 @@ namespace ami {
     }
 
     template <class L, class O, execution_policy auto P = std::execution::seq>
-    constexpr void train(input_type<0> input, const teacher_type& teacher) {
+    constexpr void train(utility::to_const_span_t<input_type<0>> input,
+                         utility::to_const_span_t<teacher_type>  teacher) {
       gradients_type gradients{};
       real_type      accurecy{};
 
@@ -168,31 +177,34 @@ namespace ami {
     // Private Methods
     template <class L, execution_policy auto P = std::execution::seq,
               size_type I = 0>
-    constexpr auto train_(input_type<I> input, const teacher_type& teacher,
-                          gradients_type& gradients,
-                          real_type& accurecy) const {
+    constexpr backward_type<I> train_(
+        utility::to_const_span_t<input_type<I>> input,
+        utility::to_const_span_t<teacher_type>  teacher,
+        gradients_type& gradients, real_type& accurecy) const {
       delta_type<I>      delta{};
 
       if constexpr (auto output = value<I>().template forward<P>(input);
                     I == (size - 1)) {
-        utility::fetch_add<P>(accurecy, L::template f<P>(teacher, output));
+        utility::fetch_add<P>(
+            accurecy,
+            L::template f<P>(teacher,
+                utility::to_const_span_t<forward_type<size - 1>>{output}));
 
-        delta = L::template df<P>(teacher, output);
+        delta = L::template df<P>(
+            teacher, utility::to_const_span_t<forward_type<size - 1>>{output});
       } else {
-        delta = train_<L, P, I + 1>(output, teacher, gradients);
+        delta = train_<L, P, I + 1>(output, teacher, gradients, accurecy);
       }
 
       if constexpr (I == 0) {
         value_type<I>::template calc_gradients<P>(
             input, delta, std::get<I>(gradients));
-        return;
+        return {};
       }
 
       if constexpr (abstract_layer<value_type<I>>) {
         return value_type<I>::template backward<P>(delta, input);
-      }
-
-      if constexpr (sequenced_policy<P>) {
+      } else if constexpr (sequenced_policy<P>) {
         value_type<I>::template calc_gradients<P>(
             input, delta, std::get<I>(gradients));
 

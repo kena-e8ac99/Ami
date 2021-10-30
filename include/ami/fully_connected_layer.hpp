@@ -6,6 +6,7 @@
 #include "ami/concepts/execution_policy.hpp"
 #include "ami/utility/indices.hpp"
 #include "ami/utility/parallel_algorithm.hpp"
+#include "ami/utility/to_span.hpp"
 
 namespace ami {
 
@@ -19,6 +20,8 @@ namespace ami {
 
     using real_type = T;
 
+    using input_type = std::array<real_type, N>;
+
     using forward_type = std::array<real_type, M>;
 
     using backward_type = typename node_type::backward_type;
@@ -31,10 +34,8 @@ namespace ami {
 
     template <optimizer<T> O>
     using optimizer_type =
-      std::pair<typename node_type::template optimizer_type<O>,
+      std::pair<std::array<typename node_type::template optimizer_type<O>, M>,
                 std::array<O, M>>;
-
-    using input_type = std::span<const real_type, N>;
 
     // Static Members
     static constexpr size_type output_size = M;
@@ -53,9 +54,10 @@ namespace ami {
 
     // Static Methods
     template <execution_policy auto P = std::execution::seq>
-    static constexpr void calc_gradients(input_type            input,
-                                         std::span<const T, M> delta,
-                                         gradient_type&        gradient) {
+    static constexpr void calc_gradients(
+        utility::to_const_span_t<input_type> input,
+        utility::to_const_span_t<delta_type> delta,
+        gradient_type&                       gradient) {
       utility::for_each<P>(
           utility::indices<M>,
           [&, input, delta](auto i) {
@@ -67,7 +69,8 @@ namespace ami {
 
     // Public Methods
     template <execution_policy auto P = std::execution::seq>
-    constexpr forward_type forward(input_type input) const {
+    constexpr forward_type forward(
+        utility::to_const_span_t<input_type> input) const {
       forward_type output{};
       utility::transform<P>(
           values_, bias_, output.begin(),
@@ -78,7 +81,8 @@ namespace ami {
     }
 
     template <execution_policy auto P = std::execution::seq>
-    constexpr backward_type backward(std::span<const T, M> delta) const {
+    constexpr backward_type backward(
+        utility::to_const_span_t<delta_type> delta) const {
       backward_type output{};
       utility::for_each<P>(
           utility::indices<M>,

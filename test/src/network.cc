@@ -14,13 +14,13 @@ int main() {
   using namespace std::execution;
   using namespace boost::ut;
 
-  constexpr ami::network<ami::fully_connected_layer<10, 20>,
+  ami::network<ami::fully_connected_layer<10, 20>,
                          ami::activation_layer<20, ami::relu>,
                          ami::fully_connected_layer<20, 30>> src{};
 
   constexpr std::array<float, 10> input{};
 
-  constexpr auto output = src.forward(input);
+  const auto output = src.forward(input);
 
   const auto output1 = src.forward<par_unseq>(input);
 

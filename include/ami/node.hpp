@@ -12,6 +12,7 @@
 #include "ami/utility/atomic_operaton.hpp"
 #include "ami/utility/indices.hpp"
 #include "ami/utility/parallel_algorithm.hpp"
+#include "ami/utility/to_span.hpp"
 
 namespace ami {
 
@@ -24,6 +25,8 @@ namespace ami {
     using real_type = T;
 
     using value_type = std::array<real_type, N>;
+
+    using input_type = value_type;
 
     using forward_type = real_type;
 
@@ -49,8 +52,8 @@ namespace ami {
     // Static Methods
     template <execution_policy auto P = std::execution::seq>
     static constexpr void calc_gradients(
-        std::span<const real_type, size> input, real_type delta,
-        std::span<real_type, size>       result) {
+        utility::to_const_span_t<input_type> input, real_type delta,
+        utility::to_span_t<gradient_type>    result) {
       utility::for_each<P>(
           utility::indices<size>,
           [=](auto i) { utility::fetch_add<P>(result[i], input[i] * delta); });
@@ -58,13 +61,14 @@ namespace ami {
 
     // Public Methods
     template <execution_policy auto P = std::execution::seq>
-    constexpr real_type forward(std::span<const real_type, size> input) const {
+    constexpr real_type forward(
+        utility::to_const_span_t<input_type> input) const {
       return utility::transform_reduce<P>(value_, input, real_type{});
     }
 
     template <execution_policy auto P = std::execution::seq>
-    constexpr void backward(real_type                  delta,
-                            std::span<real_type, size> result) const {
+    constexpr void backward(delta_type                        delta,
+                            utility::to_span_t<backward_type> result) const {
       utility::for_each<P>(
           utility::indices<size>,
           [=, this](auto i) {
@@ -73,8 +77,8 @@ namespace ami {
 
     template <execution_policy auto P = std::execution::seq,
               optimizer<real_type>  O>
-    constexpr void update(std::span<O, size>               optimizers,
-                          std::span<const real_type, size> gradients) {
+    constexpr void update(std::span<O, size>                      optimizers,
+                          utility::to_const_span_t<gradient_type> gradients) {
       utility::for_each<P>(
           utility::indices<size>,
           [=, this](auto i) { optimizers[i](value_[i], gradients[i]); });

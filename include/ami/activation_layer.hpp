@@ -6,6 +6,7 @@
 #include "ami/concepts/activation_function.hpp"
 #include "ami/concepts/execution_policy.hpp"
 #include "ami/utility/parallel_algorithm.hpp"
+#include "ami/utility/to_span.hpp"
 
 namespace ami {
 
@@ -17,7 +18,7 @@ namespace ami {
 
     using real_type = T;
 
-    using input_type = std::span<const T, N>;
+    using input_type = std::array<real_type, N>;
 
     using forward_type = std::array<T, N>;
 
@@ -35,15 +36,17 @@ namespace ami {
     static constexpr size_type output_size = N;
 
     template <execution_policy auto P = std::execution::seq>
-    static constexpr forward_type forward(input_type input) {
+    static constexpr forward_type forward(
+        utility::to_const_span_t<input_type> input) {
       forward_type output{};
       utility::transform<P>(input, output.begin(), F::template f<T>);
       return output;
     }
 
     template <execution_policy auto P = std::execution::seq>
-    static constexpr backward_type backward(std::span<const T, N> delta,
-                                            input_type            input) {
+    static constexpr backward_type backward(
+        utility::to_const_span_t<delta_type> delta,
+        utility::to_const_span_t<input_type> input) {
       std::array<T, N> output{};
       utility::transform<P>(
           delta, input, output.begin(),
