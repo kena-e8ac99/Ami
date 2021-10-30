@@ -16,3 +16,7 @@ test('gate_double_test',
 test('fully_connected_layer_test',
      executable('fully_connected_layer_test', 'fully_connected_layer.cc',
                 dependencies: parallel_test_dep))
+
+test('network_test',
+     executable('network_test', 'network.cc',
+                dependencies: parallel_test_dep))
