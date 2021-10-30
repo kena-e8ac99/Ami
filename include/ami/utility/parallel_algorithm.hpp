@@ -88,7 +88,7 @@ namespace ami::utility {
     if constexpr (sequenced_policy<P>) {
       return
         std::transform_reduce(
-            std::ranges::begin(r1), std::ranges::end(r2),
+            std::ranges::begin(r1), std::ranges::end(r1),
             std::ranges::begin(r2), std::move(init), std::move(f1),
             std::move(f2));
     }
