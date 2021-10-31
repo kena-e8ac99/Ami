@@ -130,7 +130,7 @@ namespace ami {
               execution_policy auto P = std::execution::seq,
               std::size_t N = std::dynamic_extent>
     constexpr void train(std::span<const input_type<0>, N> inputs,
-                         std::span<const teacher_type, N>  teachers, G&& g) {
+                         std::span<const teacher_type, N>  teachers, G& g) {
       std::array<size_type, B> sample{};
 
       optimizers_type<O> optimizers{};
