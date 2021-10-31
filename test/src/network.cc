@@ -1,6 +1,7 @@
 #include "ami/network.hpp"
 
 #include <array>
+#include <random>
 
 #include "ami/fully_connected_layer.hpp"
 #include "ami/activation_layer.hpp"
@@ -26,5 +27,23 @@ int main() {
 
   constexpr std::array<float, 30> teacher{};
 
-  src.train<ami::mse, ami::adam<>, seq>(input, teacher);
+  src.train<ami::mse, ami::adam<>>(input, teacher);
+
+  src.train<ami::mse, ami::adam<>, par_unseq>(input, teacher);
+
+  constexpr std::array<std::array<float, 10>, 10> inputs{};
+
+  constexpr std::array<std::array<float, 30>, 10> teachers{};
+
+  src.train<ami::mse, ami::adam<>, 10, seq, 10>(inputs, teachers);
+
+  src.train<ami::mse, ami::adam<>, 10, par_unseq, 10>(inputs, teachers);
+
+  std::mt19937 engine{std::random_device{}()};
+
+  src.train<ami::mse, ami::adam<>, 8, 10, std::mt19937, seq, 10>(
+      inputs, teachers, engine);
+
+  src.train<ami::mse, ami::adam<>, 8, 10, std::mt19937, par_unseq, 10>(
+      inputs, teachers, engine);
 }
