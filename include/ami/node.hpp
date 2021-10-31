@@ -92,12 +92,8 @@ namespace ami {
     }
 
     // Getter / Setter
-    constexpr std::span<real_type, size> value() & noexcept {
-      return std::span{value_};
-    }
-
     constexpr std::span<const real_type, size> value() const& noexcept {
-      return std::span{value_};
+      return value_;
     }
 
     constexpr value_type value() && noexcept {

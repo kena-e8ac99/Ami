@@ -113,6 +113,26 @@ namespace ami {
     }
 
     // Getter / Setter
+    constexpr auto value() const& {
+      std::array<typename node_type::value_type, output_size> output{};
+
+      std::ranges::transform(
+          nodes_, output.begin(), [](auto&& node) { return node.value(); });
+
+      return std::pair{std::move(output), bias_};
+    }
+
+    constexpr auto value() && {
+      std::array<typename node_type::value_type, output_size> output{};
+
+      std::ranges::transform(
+          nodes_, output.begin(),
+          [](auto&& node) { return std::move(node).value(); });
+
+      return std::pair{std::move(output), std::move(bias_)};
+    }
+
+
   private:
     // Private Members
     std::array<node_type, output_size> nodes_{};

@@ -63,5 +63,7 @@ namespace ami {
 
     template <execution_policy auto P = std::execution::seq, class O>
     constexpr void update(optimizer_type<O>, gradient_type) const noexcept {}
+
+    static constexpr value_type value() noexcept { return value_type{}; };
   };
 }

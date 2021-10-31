@@ -95,10 +95,10 @@ namespace ami {
     template <execution_policy auto P = std::execution::seq, size_type I = 0>
     constexpr auto forward(
         utility::to_const_span_t<input_type<I>> input) const {
-      if constexpr (I == (size - 1)) {
-        return value<I>().template forward<P>(input);
+      if constexpr (auto&& layers = std::get<I>(values_); I == (size - 1)) {
+        return layers.template forward<P>(input);
       } else {
-        return forward<P, I + 1>(value<I>().template forward<P>(input));
+        return forward<P, I + 1>(layers.template forward<P>(input));
       }
     }
 
@@ -165,20 +165,18 @@ namespace ami {
     }
 
     // Getter / Setter
-    template <size_type I = 0>
-    requires (I < size)
-    constexpr auto& value() & noexcept { return std::get<I>(values_); }
-
-    template <size_type I = 0>
-    requires (I < size)
-    constexpr const auto& value() const& noexcept {
-      return std::get<I>(values_);
+    constexpr auto value() const& {
+      return
+        [this]<std::size_t... I>(std::index_sequence<I...>) {
+          return std::tuple{std::get<I>(values_).value()...};
+        }(std::make_index_sequence<size>{});
     }
 
-    template <size_type I = 0>
-    requires (I < size)
-    constexpr auto value() && noexcept {
-      return std::move(std::get<I>(values_));
+    constexpr auto value() && {
+      return
+        [this]<std::size_t... I>(std::index_sequence<I...>) {
+          return std::tuple{std::move(std::get<I>(values_)).value()...};
+        }(std::make_index_sequence<size>{});
     }
 
   private:
@@ -194,7 +192,9 @@ namespace ami {
         gradients_type& gradients, real_type& accurecy) const {
       delta_type<I>      delta{};
 
-      if constexpr (auto output = value<I>().template forward<P>(input);
+      auto&& layer = std::get<I>(values_);
+
+      if constexpr (auto output = layer.template forward<P>(input);
                     I == (size - 1)) {
         utility::fetch_add<P>(
             accurecy,
@@ -219,10 +219,10 @@ namespace ami {
         value_type<I>::template calc_gradients<P>(
             input, delta, std::get<I>(gradients));
 
-        return value<I>().template backward<P>(delta);
+        return layer.template backward<P>(delta);
       } else {
         auto f = std::async(
-            [&]() { return value<I>().template backward<P>(delta); });
+            [&]() { return layer.template backward<P>(delta); });
 
         value_type<I>::template calc_gradients<P>(
             input, delta, std::get<I>(gradients));
@@ -237,7 +237,7 @@ namespace ami {
       if constexpr (sequenced_policy<P>) {
         [&]<std::size_t... I>(std::index_sequence<I...>) {
           ([&]() {
-            value<I>().template update<P, O>(
+           std::get<I>(values_).template update<P, O>(
                 std::get<I>(optimizers), std::get<I>(gradients));
            }(), ...);
         }(std::make_index_sequence<size>{});
@@ -247,7 +247,7 @@ namespace ami {
 
           ([&]() {
              fs[I] = std::async([&]() {
-                 value<I>().template update<P, O>(
+                 std::get<I>(values_).template update<P, O>(
                      std::get<I>(optimizers), std::get<I>(gradients)); });
            }(), ...);
 
