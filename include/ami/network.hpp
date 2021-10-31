@@ -111,7 +111,7 @@ namespace ami {
                          std::span<const teacher_type, N>  teachers) {
       optimizers_type<O> optimizers{};
 
-      for (std::size_t epoch; epoch != E; ++epoch) {
+      for (std::size_t epoch = 0; epoch != E; ++epoch) {
         gradients_type gradients{};
         real_type      accurecy{};
 
@@ -137,7 +137,7 @@ namespace ami {
 
       constexpr auto epoch = B * E;
 
-      for (std::size_t n; n != epoch; ++n) {
+      for (std::size_t n = 0; n != epoch; ++n) {
         gradients_type gradients{};
         real_type      accurecy{};
 
