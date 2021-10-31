@@ -15,6 +15,7 @@
 #include "ami/concepts/valid_network.hpp"
 #include "ami/utility/atomic_operaton.hpp"
 #include "ami/utility/indices.hpp"
+#include "ami/utility/make_array.hpp"
 #include "ami/utility/parallel_algorithm.hpp"
 #include "ami/utility/to_span.hpp"
 
@@ -77,6 +78,16 @@ namespace ami {
     static constexpr size_type output_size = value_type<I>::output_size;
 
     // Constructor
+    network() = default;
+
+    explicit constexpr network(const values_type& value) : values_{value} {}
+
+    explicit constexpr network(values_type&& value) : values_{std::move(value)}
+    {}
+
+    template <std::uniform_random_bit_generator G>
+    explicit constexpr network(G& engine)
+      : values_{First(engine), Args(engine)...} {}
 
     // Static Methods
 

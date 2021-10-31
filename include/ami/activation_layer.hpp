@@ -31,6 +31,13 @@ namespace ami {
     template <class O>
     struct optimizer_type {};
 
+    // Dummy
+    using value_type = char;
+
+    activation_layer() = default;
+
+    explicit constexpr activation_layer(auto&&) {}
+
     static constexpr size_type input_size = N;
 
     static constexpr size_type output_size = N;

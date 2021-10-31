@@ -4,6 +4,7 @@
 #include <atomic>
 #include <concepts>
 #include <functional>
+#include <random>
 #include <ranges>
 #include <span>
 
@@ -11,6 +12,7 @@
 #include "ami/concepts/optimizer.hpp"
 #include "ami/utility/atomic_operaton.hpp"
 #include "ami/utility/indices.hpp"
+#include "ami/utility/make_array.hpp"
 #include "ami/utility/parallel_algorithm.hpp"
 #include "ami/utility/to_span.hpp"
 
@@ -45,9 +47,14 @@ namespace ami {
     // Constructor
     node() = default;
 
-    explicit constexpr node(std::span<const real_type, size> value) {
-      std::ranges::copy(value, value_.begin());
-    }
+    explicit constexpr node(const value_type& value) : value_{value} {}
+
+    explicit constexpr node(value_type&& value) : value_{std::move(value)} {}
+
+    template <std::uniform_random_bit_generator G>
+    explicit constexpr node(G& engine, real_type mean, real_type stddev)
+      : value_{utility::make_normal_distributed_array<N>(mean, stddev, engine)}
+    {}
 
     // Static Methods
     template <execution_policy auto P = std::execution::seq>

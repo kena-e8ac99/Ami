@@ -1,6 +1,8 @@
 #pragma once
 
 #include <array>
+#include <cmath>
+#include <random>
 
 #include "ami/node.hpp"
 #include "ami/concepts/execution_policy.hpp"
@@ -19,6 +21,9 @@ namespace ami {
     using node_type = node<N, T>;
 
     using real_type = T;
+
+    using value_type
+    = std::pair<std::array<node_type, M>, std::array<real_type, M>>;
 
     using input_type = std::array<real_type, N>;
 
@@ -45,12 +50,17 @@ namespace ami {
     // Constructor
     fully_connected_layer() = default;
 
-    explicit fully_connected_layer(
-        std::span<const node_type, output_size> values,
-        std::span<const real_type, output_size> bias) {
-      std::ranges::copy(values, values_.begin());
-      std::ranges::copy(bias, bias_.begin());
-    }
+    explicit constexpr fully_connected_layer(const value_type& value)
+      : nodes_{value.first}, bias_{value.second} {}
+
+    explicit constexpr fully_connected_layer(value_type&& value)
+      : nodes_{std::move(value.first)}, bias_{std::move(value.second)} {}
+
+    template <std::uniform_random_bit_generator G>
+    explicit constexpr fully_connected_layer(
+        G& engine, real_type mean = 0,
+        real_type stddev = std::sqrt(real_type{2 / N}))
+      : nodes_{utility::make_array<node_type, M>(mean, stddev, engine)} {}
 
     // Static Methods
     template <execution_policy auto P = std::execution::seq>
@@ -73,7 +83,7 @@ namespace ami {
         utility::to_const_span_t<input_type> input) const {
       forward_type output{};
       utility::transform<P>(
-          values_, bias_, output.begin(),
+          nodes_, bias_, output.begin(),
           [=](const auto& value, auto bias) {
             return value.template forward<P>(input) + bias;
           });
@@ -87,7 +97,7 @@ namespace ami {
       utility::for_each<P>(
           utility::indices<M>,
           [&, delta](auto i) {
-            values_[i].template backward<P>(delta[i], output); });
+            nodes_[i].template backward<P>(delta[i], output); });
       return output;
     }
 
@@ -98,14 +108,14 @@ namespace ami {
           utility::indices<output_size>,
           [&](auto i) {
             optimizers.second[i](bias_[i], gradients.second[i]);
-            values_[i].template update<P, O>(
+            nodes_[i].template update<P, O>(
                 optimizers.first[i], gradients.first[i]); });
     }
 
     // Getter / Setter
   private:
     // Private Members
-    std::array<node_type, output_size> values_{};
+    std::array<node_type, output_size> nodes_{};
 
     std::array<real_type, output_size>  bias_{};
 
