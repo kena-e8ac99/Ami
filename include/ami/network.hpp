@@ -141,7 +141,7 @@ namespace ami {
         gradients_type gradients{};
         real_type      accurecy{};
 
-        std::ranges::sample(utility::indices<N>, sample.begin(), g);
+        std::ranges::sample(utility::indices<N>, sample.begin(), B, g);
 
         utility::for_each<P>(
             sample,
