@@ -1,5 +1,4 @@
 #include "ami/fully_connected_layer.hpp"
-#include "ami/perceptron.hpp"
 #include <array>
 
 int main () {
