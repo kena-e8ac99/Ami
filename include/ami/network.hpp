@@ -146,7 +146,7 @@ namespace ami {
 
       optimizers_type<O> optimizers{};
 
-      constexpr auto epoch = B * E;
+      constexpr auto epoch = (N / B) * E;
 
       for (std::size_t n = 0; n != epoch; ++n) {
         gradients_type gradients{};
