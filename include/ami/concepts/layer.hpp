@@ -1,12 +1,11 @@
 #pragma once
 
-#include "ami/concepts/abstract_layer.hpp"
+#include <concepts>
 
 namespace ami {
   template <class T>
   concept layer
-  = abstract_layer<T> ||
-    requires (T t) {
+  = requires (T t) {
       typename T::input_type;
       typename T::forward_type;
       typename T::backward_type;

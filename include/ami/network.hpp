@@ -46,6 +46,12 @@ namespace ami {
 
     using teacher_type = forward_type<sizeof...(Args)>;
 
+    template <size_type I = 0>
+    using derivative_type = typename value_type<I>::derivative_type;
+
+    using derivative_types = std::tuple<
+        typename First::derivative_type, typename Args::derivative_type...>;
+
     using backwards_type = std::tuple<typename Args::backward_type...>;
 
     template <size_type I = 0>
@@ -194,7 +200,9 @@ namespace ami {
 
       auto&& layer = std::get<I>(values_);
 
-      if constexpr (auto output = layer.template forward<P>(input);
+      derivative_type<I> derivative{};
+
+      if constexpr (auto output = layer.template forward<P>(input, derivative);
                     I == (size - 1)) {
         utility::fetch_add<P>(
             accurecy,
@@ -209,23 +217,21 @@ namespace ami {
 
       if constexpr (I == 0) {
         value_type<I>::template calc_gradients<P>(
-            input, delta, std::get<I>(gradients));
+            input, delta, derivative, std::get<I>(gradients));
         return {};
       }
 
-      if constexpr (abstract_layer<value_type<I>>) {
-        return value_type<I>::template backward<P>(delta, input);
-      } else if constexpr (sequenced_policy<P>) {
+      if constexpr (sequenced_policy<P>) {
         value_type<I>::template calc_gradients<P>(
-            input, delta, std::get<I>(gradients));
+            input, delta, derivative, std::get<I>(gradients));
 
-        return layer.template backward<P>(delta);
+        return layer.template backward<P>(delta, derivative);
       } else {
         auto f = std::async(
-            [&]() { return layer.template backward<P>(delta); });
+            [&]() { return layer.template backward<P>(delta, derivative); });
 
         value_type<I>::template calc_gradients<P>(
-            input, delta, std::get<I>(gradients));
+            input, delta, derivative, std::get<I>(gradients));
 
         return f.get();
       }

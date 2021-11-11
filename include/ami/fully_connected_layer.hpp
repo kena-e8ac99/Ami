@@ -5,6 +5,8 @@
 #include <random>
 
 #include "ami/node.hpp"
+#include "ami/activation_function/relu.hpp"
+#include "ami/concepts/activation_function.hpp"
 #include "ami/concepts/execution_policy.hpp"
 #include "ami/utility/indices.hpp"
 #include "ami/utility/parallel_algorithm.hpp"
@@ -12,7 +14,8 @@
 
 namespace ami {
 
-  template <std::size_t N, std::size_t M, std::floating_point T = float>
+  template <std::size_t N, std::size_t M, std::floating_point T = float,
+            activation_function<T> F = relu>
   class fully_connected_layer final {
   public:
     // Public Types
@@ -28,6 +31,8 @@ namespace ami {
     using input_type = std::array<real_type, N>;
 
     using forward_type = std::array<real_type, M>;
+
+    using derivative_type = forward_type;
 
     using backward_type = typename node_type::backward_type;
 
@@ -65,15 +70,17 @@ namespace ami {
     // Static Methods
     template <execution_policy auto P = std::execution::seq>
     static constexpr void calc_gradients(
-        utility::to_const_span_t<input_type> input,
-        utility::to_const_span_t<delta_type> delta,
-        gradient_type&                       gradient) {
+        utility::to_const_span_t<input_type>      input,
+        utility::to_const_span_t<delta_type>      delta,
+        utility::to_const_span_t<derivative_type> derivative,
+        gradient_type&                            gradient) {
       utility::for_each<P>(
           utility::indices<M>,
-          [&, input, delta](auto i) {
-            utility::fetch_add<P>(gradient.second[i], delta[i]);
+          [&, input, delta, derivative](auto i) {
+            auto tmp = delta[i] * derivative[i];
+            utility::fetch_add<P>(gradient.second[i], tmp);
             node_type::template calc_gradients<P>(
-                input, delta[i], gradient.first[i]);
+                input, tmp, gradient.first[i]);
           });
     }
 
@@ -85,19 +92,36 @@ namespace ami {
       utility::transform<P>(
           nodes_, bias_, output.begin(),
           [=](const auto& value, auto bias) {
-            return value.template forward<P>(input) + bias;
+            return F::f(value.template forward<P>(input) + bias);
+          });
+      return output;
+    }
+
+    template <execution_policy auto P = std::execution::seq>
+    constexpr forward_type forward(
+        utility::to_const_span_t<input_type> input,
+        utility::to_span_t<derivative_type>  derivative) const {
+      forward_type output{};
+      utility::for_each<P>(
+          utility::indices<M>,
+          [&, input, derivative](auto i) {
+            auto tmp      = nodes_[i].template forward<P>(input) + bias_[i];
+            derivative[i] = F::df(tmp);
+            output[i]     = F::f(tmp);
           });
       return output;
     }
 
     template <execution_policy auto P = std::execution::seq>
     constexpr backward_type backward(
-        utility::to_const_span_t<delta_type> delta) const {
+        utility::to_const_span_t<delta_type>      delta,
+        utility::to_const_span_t<derivative_type> derivative) const {
       backward_type output{};
       utility::for_each<P>(
           utility::indices<M>,
-          [&, delta](auto i) {
-            nodes_[i].template backward<P>(delta[i], output); });
+          [&, delta, derivative](auto i) {
+            nodes_[i].template backward<P>(delta[i] * derivative[i], output);
+          });
       return output;
     }
 
