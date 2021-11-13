@@ -32,15 +32,17 @@ int main() {
 
   constexpr std::array<std::array<float, 30>, 10> teachers{};
 
-  src.train<ami::mse, ami::adam<>, 10, seq, 10>(inputs, teachers);
+  src.train<ami::mse, ami::adam<>, 10>(
+      std::span{inputs}, std::span{teachers});
 
-  src.train<ami::mse, ami::adam<>, 10, par_unseq, 10>(inputs, teachers);
+  src.train<ami::mse, ami::adam<>, 10, par_unseq>(
+      std::span{inputs}, std::span{teachers});
 
   std::mt19937 engine{std::random_device{}()};
 
-  src.train<ami::mse, ami::adam<>, 8, 10, std::mt19937, seq, 10>(
-      inputs, teachers, engine);
+  src.train<ami::mse, ami::adam<>, 8, 10, std::mt19937>(
+      std::span{inputs}, std::span{teachers}, engine);
 
-  src.train<ami::mse, ami::adam<>, 8, 10, std::mt19937, par_unseq, 10>(
-      inputs, teachers, engine);
+  src.train<ami::mse, ami::adam<>, 8, 10, std::mt19937, par_unseq>(
+      std::span{inputs}, std::span{teachers}, engine);
 }
