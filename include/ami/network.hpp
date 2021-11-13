@@ -108,9 +108,12 @@ namespace ami {
       }
     }
 
-    template <class L, class O, execution_policy auto P = std::execution::seq>
+    template <class L, class O, execution_policy auto P = std::execution::seq,
+              class F = void(*)(real_type, std::size_t)>
+    requires std::invocable<F, real_type, std::size_t>
     constexpr void train(utility::to_const_span_t<input_type<0>> input,
-                         utility::to_const_span_t<teacher_type>  teacher) {
+                         utility::to_const_span_t<teacher_type>  teacher,
+                         F f = [](real_type, std::size_t){}) {
       gradients_type gradients{};
       real_type      accurecy{};
 
@@ -119,13 +122,18 @@ namespace ami {
       optimizers_type<O> optimizers{};
 
       update_<P, O>(optimizers, gradients);
+
+      f(accurecy, size_type{1});
     }
 
     template <class L, class O, std::size_t E,
               execution_policy auto P = std::execution::seq,
-              std::size_t N = std::dynamic_extent>
+              std::size_t N = std::dynamic_extent,
+              class F = void(*)(real_type, std::size_t)>
+    requires std::invocable<F, real_type, std::size_t>
     constexpr void train(std::span<const input_type<0>, N> inputs,
-                         std::span<const teacher_type, N>  teachers) {
+                         std::span<const teacher_type, N>  teachers,
+                         F f = [](real_type, std::size_t){}) {
       optimizers_type<O> optimizers{};
 
       for (std::size_t epoch = 0; epoch != E; ++epoch) {
@@ -139,15 +147,20 @@ namespace ami {
             });
 
         update_<P, O>(optimizers, gradients);
+
+        f(accurecy, epoch);
       }
     }
 
     template <class L, class O, std::size_t B, std::size_t E,
               std::uniform_random_bit_generator G,
               execution_policy auto P = std::execution::seq,
-              std::size_t N = std::dynamic_extent>
+              std::size_t N = std::dynamic_extent,
+              class F = void(*)(real_type, std::size_t)>
+    requires std::invocable<F, real_type, std::size_t>
     constexpr void train(std::span<const input_type<0>, N> inputs,
-                         std::span<const teacher_type, N>  teachers, G& g) {
+                         std::span<const teacher_type, N>  teachers, G& g,
+                         F f = [](real_type, std::size_t){}) {
       std::array<size_type, B> sample{};
 
       optimizers_type<O> optimizers{};
@@ -167,6 +180,8 @@ namespace ami {
             });
 
         update_<P, O>(optimizers, gradients);
+
+        f(accurecy, n);
       }
     }
 
