@@ -65,7 +65,7 @@ namespace ami {
     explicit constexpr fully_connected_layer(
         G& engine, real_type mean = 0,
         real_type stddev = std::sqrt(real_type{2 / N}))
-      : nodes_{utility::make_array<node_type, M>(mean, stddev, engine)} {}
+      : nodes_{utility::make_array<node_type, M>(engine, mean, stddev)} {}
 
     // Static Methods
     template <execution_policy auto P = std::execution::seq>
