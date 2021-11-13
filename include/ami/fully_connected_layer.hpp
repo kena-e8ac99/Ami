@@ -64,7 +64,7 @@ namespace ami {
     template <std::uniform_random_bit_generator G>
     explicit constexpr fully_connected_layer(
         G& engine, real_type mean = 0,
-        real_type stddev = std::sqrt(real_type{2 / N}))
+        real_type stddev = std::sqrt(real_type{2} / real_type{N}))
       : nodes_{utility::make_array<node_type, M>(engine, mean, stddev)} {}
 
     // Static Methods
