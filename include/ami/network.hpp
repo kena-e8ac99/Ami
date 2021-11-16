@@ -148,7 +148,7 @@ namespace ami {
 
         update_<P, O>(optimizers, gradients);
 
-        f(accurecy, epoch);
+        f(accurecy / N, epoch);
       }
     }
 
@@ -181,7 +181,7 @@ namespace ami {
 
         update_<P, O>(optimizers, gradients);
 
-        f(accurecy, n);
+        f(accurecy / B, n);
       }
     }
 
@@ -221,11 +221,12 @@ namespace ami {
                     I == (size - 1)) {
         utility::fetch_add<P>(
             accurecy,
-            L::template f<P>(teacher,
-                utility::to_const_span_t<forward_type<size - 1>>{output}));
+            L::template f<P>(
+              utility::to_const_span_t<forward_type<size - 1>>{output},
+              teacher));
 
         delta = L::template df<P>(
-            teacher, utility::to_const_span_t<forward_type<size - 1>>{output});
+            utility::to_const_span_t<forward_type<size - 1>>{output}, teacher);
       } else {
         delta = train_<L, P, I + 1>(output, teacher, gradients, accurecy);
       }
