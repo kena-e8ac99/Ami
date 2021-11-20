@@ -3,9 +3,11 @@
 #include <array>
 #include <random>
 
+#include <ami/activation_function/sigmoid.hpp>
 #include "ami/fully_connected_layer.hpp"
 #include "ami/loss_function/mse.hpp"
 #include "ami/optimizer/adam.hpp"
+#include "ami/optimizer/momentum.hpp"
 
 #include <boost/ut.hpp>
 
@@ -13,36 +15,39 @@ int main() {
   using namespace std::execution;
   using namespace boost::ut;
 
-  ami::network<ami::fully_connected_layer<10, 20>,
-               ami::fully_connected_layer<20, 30>> src{};
-
-  constexpr std::array<float, 10> input{};
-
-  const auto output = src.forward(input);
-
-  const auto output1 = src.forward<par_unseq>(input);
-
-  constexpr std::array<float, 30> teacher{};
-
-  src.train<ami::mse, ami::adam<>>(input, teacher);
-
-  src.train<ami::mse, ami::adam<>, par_unseq>(input, teacher);
-
-  constexpr std::array<std::array<float, 10>, 10> inputs{};
-
-  constexpr std::array<std::array<float, 30>, 10> teachers{};
-
-  src.train<ami::mse, ami::adam<>, 10>(
-      std::span{inputs}, std::span{teachers});
-
-  src.train<ami::mse, ami::adam<>, 10, par_unseq>(
-      std::span{inputs}, std::span{teachers});
-
   std::mt19937 engine{std::random_device{}()};
 
-  src.train<ami::mse, ami::adam<>, 8, 10, std::mt19937>(
-      std::span{inputs}, std::span{teachers}, engine);
+  ami::network<
+    ami::fully_connected_layer<3, 10, double>,
+    ami::fully_connected_layer<10, 1, double, ami::sigmoid>> src{engine};
 
-  src.train<ami::mse, ami::adam<>, 8, 10, std::mt19937, par_unseq>(
-      std::span{inputs}, std::span{teachers}, engine);
+  constexpr std::array<std::array<double, 3>, 4> inputs {
+    std::array{1.0, 1.0, 1.0}, std::array{0.0, 0.0, 0.0},
+    std::array{1.0, 1.0, 0.0}, std::array{1.0, 0.0, 1.0}
+  };
+
+  constexpr std::array<std::array<double, 1>, 4> teachers {
+    std::array{0.0}, std::array{0.0}, std::array{1.0}, std::array{1.0}
+  };
+
+  src.train<ami::mse, ami::adam<double>, 1000, par_unseq>(
+      std::span{inputs}, std::span{teachers},
+      [](auto x, auto i) {
+        if (i % 100 == 0) {
+          std::cout << "iteraton " << i << " : accuracy = " << x << '\n';
+        }
+      });
+
+  std::cout << "output\n";
+
+  for (std::size_t i{}; i != inputs.size(); ++i) {
+    auto result = src.forward(inputs[i]);
+    std::cout << '[';
+    std::ranges::for_each(
+        inputs[i],[](auto x) { std::cout << x; });
+    std::cout << "] -> [";
+    std::ranges::for_each(
+        result, [](auto x){ std::cout << x; });
+    std::cout << "]\n";
+  }
 }
