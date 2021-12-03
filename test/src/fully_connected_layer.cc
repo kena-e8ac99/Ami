@@ -1,5 +1,6 @@
 #include "ami/fully_connected_layer.hpp"
 #include <array>
+#include <random>
 
 int main () {
   using namespace std::execution;
@@ -10,11 +11,14 @@ int main () {
 
   layer_t::derivative_type derivative{};
 
+  std::default_random_engine engine{std::random_device{}()};
+
   constexpr auto output = src.forward(std::array<float, 3>{});
 
   const auto output1 = src.forward<par_unseq>(std::array<float, 3>{});
 
-  auto output2 = src.forward<par_unseq>(std::array<float, 3>{}, derivative);
+  auto output2 = src.forward<par_unseq>(
+      std::array<float, 3>{}, derivative, engine);
 
   constexpr std::array<float, 4> delta{};
 

@@ -18,7 +18,7 @@ int main() {
   std::mt19937 engine{std::random_device{}()};
 
   ami::network<
-    ami::fully_connected_layer<3, 10, double>,
+    ami::fully_connected_layer<3, 10, double, ami::relu, 0.5>,
     ami::fully_connected_layer<10, 1, double, ami::sigmoid>> src{engine};
 
   constexpr std::array<std::array<double, 3>, 4> inputs {

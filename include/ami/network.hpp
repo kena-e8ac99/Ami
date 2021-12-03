@@ -114,10 +114,12 @@ namespace ami {
     constexpr void train(utility::to_const_span_t<input_type<0>> input,
                          utility::to_const_span_t<teacher_type>  teacher,
                          F f = [](real_type, std::size_t){}) {
-      gradients_type gradients{};
-      real_type      accurecy{};
+      gradients_type             gradients{};
+      real_type                  accurecy{};
+      std::default_random_engine engine{std::random_device{}()};
 
-      train_<L, P, 0>(input, teacher, gradients, accurecy);
+
+      train_<L, P, 0>(input, teacher, gradients, accurecy, engine);
 
       optimizers_type<O> optimizers{};
 
@@ -143,7 +145,10 @@ namespace ami {
         utility::for_each<P>(
             utility::indices<N>,
             [&, inputs, teachers](auto i) {
-              train_<L, P, 0>(inputs[i], teachers[i], gradients, accurecy);
+              std::default_random_engine engine{std::random_device{}()};
+
+              train_<L, P, 0>(inputs[i], teachers[i], gradients, accurecy,
+                              engine);
             });
 
         update_<P, O>(optimizers, gradients);
@@ -176,7 +181,10 @@ namespace ami {
         utility::for_each<P>(
             sample,
             [&, inputs, teachers](auto i) {
-              train_<L, P, 0>(inputs[i], teachers[i], gradients, accurecy);
+              std::default_random_engine engine{std::random_device{}()};
+
+              train_<L, P, 0>(inputs[i], teachers[i], gradients, accurecy,
+                              engine);
             });
 
         update_<P, O>(optimizers, gradients);
@@ -206,19 +214,20 @@ namespace ami {
 
     // Private Methods
     template <class L, execution_policy auto P = std::execution::seq,
-              size_type I = 0>
+              size_type I = 0, std::uniform_random_bit_generator G>
     constexpr backward_type<I> train_(
         utility::to_const_span_t<input_type<I>> input,
         utility::to_const_span_t<teacher_type>  teacher,
-        gradients_type& gradients, real_type& accurecy) const {
+        gradients_type& gradients, real_type& accurecy, G& engine) const {
       delta_type<I>      delta{};
 
       auto&& layer = std::get<I>(values_);
 
       derivative_type<I> derivative{};
 
-      if constexpr (auto output = layer.template forward<P>(input, derivative);
-                    I == (size - 1)) {
+      if constexpr (
+          auto output = layer.template forward<P>(input, derivative, engine);
+          I == (size - 1)) {
         utility::fetch_add<P>(
             accurecy,
             L::template f<P>(
@@ -228,7 +237,8 @@ namespace ami {
         delta = L::template df<P>(
             utility::to_const_span_t<forward_type<size - 1>>{output}, teacher);
       } else {
-        delta = train_<L, P, I + 1>(output, teacher, gradients, accurecy);
+        delta =
+          train_<L, P, I + 1>(output, teacher, gradients, accurecy, engine);
       }
 
       if constexpr (I == 0) {

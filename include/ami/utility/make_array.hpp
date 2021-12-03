@@ -40,4 +40,11 @@ namespace ami::utility {
 
     return make_array<N>([&]() { return dist(engine); });
   }
+
+  template <std::size_t N, std::uniform_random_bit_generator G>
+  inline constexpr std::array<bool, N> make_bernouli_distributed_array(
+      double p, G& engine) {
+    std::bernoulli_distribution dist{p};
+    return make_array<N>([&]() { return dist(engine); });
+  }
 }

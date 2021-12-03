@@ -9,13 +9,15 @@
 #include "ami/concepts/activation_function.hpp"
 #include "ami/concepts/execution_policy.hpp"
 #include "ami/utility/indices.hpp"
+#include "ami/utility/make_array.hpp"
 #include "ami/utility/parallel_algorithm.hpp"
 #include "ami/utility/to_span.hpp"
 
 namespace ami {
 
   template <std::size_t N, std::size_t M, std::floating_point T = float,
-            activation_function<T> F = relu>
+            activation_function<T> F = relu, double Dropout = 1.0>
+  requires (Dropout > 0.0 && Dropout <= 1.0)
   class fully_connected_layer final {
   public:
     // Public Types
@@ -97,19 +99,40 @@ namespace ami {
       return output;
     }
 
-    template <execution_policy auto P = std::execution::seq>
+    template <execution_policy auto P = std::execution::seq,
+              std::uniform_random_bit_generator G>
     constexpr forward_type forward(
         utility::to_const_span_t<input_type> input,
-        utility::to_span_t<derivative_type>  derivative) const {
+        utility::to_span_t<derivative_type>  derivative, G& engine) const {
       forward_type output{};
-      utility::for_each<P>(
-          utility::indices<M>,
-          [&, input, derivative](auto i) {
-            auto tmp      = nodes_[i].template forward<P>(input) + bias_[i];
-            derivative[i] = F::df(tmp);
-            output[i]     = F::f(tmp);
-          });
-      return output;
+
+      if constexpr (Dropout == 1.0) {
+        utility::for_each<P>(
+            utility::indices<M>,
+            [&, input, derivative](auto i) {
+              auto tmp      = nodes_[i].template forward<P>(input) + bias_[i];
+              derivative[i] = F::df(tmp);
+              output[i]     = F::f(tmp);
+            });
+        return output;
+      } else {
+        const auto bernouli_distributed_array =
+            utility::make_bernouli_distributed_array<output_size>(
+                Dropout, engine);
+
+        utility::for_each<P>(
+            utility::indices<M>,
+            [&, input, derivative](auto i) {
+              if (bernouli_distributed_array[i]) {
+                auto tmp      =
+                  (nodes_[i].template forward<P>(input) + bias_[i])
+                    / static_cast<real_type>(Dropout);
+                derivative[i] = F::df(tmp);
+                output[i]     = F::f(tmp);
+              }
+            });
+        return output;
+      }
     }
 
     template <execution_policy auto P = std::execution::seq>
