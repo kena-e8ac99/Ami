@@ -22,6 +22,8 @@ jobs:
       - uses: egor-tensin/setup-gcc@v1
         with:
           version: 11
+      - run:
+          export CXX=g++11
       - uses: actions/setup-python@v1
       - uses: BSFishy/meson-build@v1.0.3
         with:
