@@ -22,7 +22,7 @@ jobs:
       - uses: egor-tensin/setup-gcc@v1
         with:
           version: 11
-      - run:
+      - run: |
           rm /usr/bin/g++
           ln -s /usr/bin/g++-11 /usr/bin/g++
       - uses: actions/setup-python@v1
