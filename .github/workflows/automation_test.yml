@@ -32,6 +32,6 @@ jobs:
           action: test
           setup-options: -Db_coverage=true
           options: --verbose
-      - uses: BSFishy/meson-build@v1.0.3
-        with:
-          action: coverage
+      - run: |
+          pip install gcovr
+          ninja coverage -C build
