@@ -32,4 +32,32 @@ int main() {
     static_assert(std::same_as<typename
         node<RealType, 2>::backward_type, std::array<RealType, 2>>);
   } | std::pair<float, double>{};
+
+  "Getter"_test = []<std::floating_point RealType> {
+    [] {
+      node<RealType, 1> target{};
+
+      expect(eq(target.value(), RealType{}));
+      [target = target] {
+        expect(eq(target.value(), RealType{}));
+      }();
+      expect(eq(std::move(target).value(), RealType{}));
+    }();
+
+    [] {
+      node<RealType, 2> target{};
+      expect(eq(target.value().front(), RealType{}));
+      expect(eq(target.value().back(), RealType{}));
+
+      [target = target] {
+        expect(eq(target.value().front(), RealType{}));
+        expect(eq(target.value().back(), RealType{}));
+      }();
+
+      [value = std::move(target).value()] {
+        expect(eq(value.front(), RealType{}));
+        expect(eq(value.back(), RealType{}));
+      }();
+    }();
+  } | std::pair<float, double>{};
 }
