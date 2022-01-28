@@ -34,7 +34,7 @@ jobs:
           options: --verbose
       - run: |
           pip install gcovr
-          ninja coverage -C build
+          ninja coverage-xml -C build
       - uses: codecov/codecov-action@v2
         with:
           flags: unittests
