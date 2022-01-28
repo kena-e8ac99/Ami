@@ -1,32 +1,36 @@
 name: Automation Test
 
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the main branch
-  # Also you can run this workflow manually from the Actions tab
   [push, pull_request, workflow_dispatch]
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-      # Init and update submodules
+
       - uses: snickerbockers/submodules-init@v4
 
-      # Runs tests with Meson
       - uses: egor-tensin/setup-gcc@v1
         with:
           version: 11
-      - run: |
+
+      - run:
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 110 --slave /usr/bin/g++ g++ /usr/bin/g++-11 --slave /usr/bin/gcov gcov /usr/bin/gcov-11
+
       - uses: actions/setup-python@v1
+
       - uses: BSFishy/meson-build@v1.0.3
         with:
           action: test
+          setup-options: -Db_coverage=true
+          options: --verbose
+
+      - run: |
+          pip install gcovr
+          gcovr -e ".*ut\.hpp" --xml-pretty -o coverage.xml
+
+      - uses: codecov/codecov-action@v2
+        with:
+          file: coverage.xml
