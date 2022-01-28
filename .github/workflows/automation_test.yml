@@ -13,8 +13,6 @@ jobs:
       - uses: snickerbockers/submodules-init@v4
 
       - uses: egor-tensin/setup-gcc@v1
-        with:
-          version: 11
 
       - run:
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 110 --slave /usr/bin/g++ g++ /usr/bin/g++-11 --slave /usr/bin/gcov gcov /usr/bin/gcov-11
