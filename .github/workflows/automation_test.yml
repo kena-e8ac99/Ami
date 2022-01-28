@@ -35,3 +35,7 @@ jobs:
       - run: |
           pip install gcovr
           ninja coverage -C build
+      - uses: codecov/codecov-action@v2
+        with:
+          flags: unittests
+          directory: build/meson-logs
