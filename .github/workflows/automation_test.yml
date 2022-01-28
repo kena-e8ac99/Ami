@@ -34,8 +34,7 @@ jobs:
           options: --verbose
       - run: |
           pip install gcovr
-          ninja coverage-xml -C build
+          gcovr -e ".*ut\.hpp" --xml-pretty -o coverage.xml
       - uses: codecov/codecov-action@v2
         with:
-          flags: unittests
-          directory: build/meson-logs
+          file: coverage.xml
