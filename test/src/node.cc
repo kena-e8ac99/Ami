@@ -60,4 +60,38 @@ int main() {
       }();
     }();
   } | std::pair<float, double>{};
+
+  using test_targets = std::tuple<node<float, 1>, node<float, 2>,
+                                  node<double, 1>, node<double, 2>>;
+
+  "constructor"_test = []<class Node> {
+      using real_t  = typename Node::real_type;
+      using value_t = typename Node::value_type;
+
+    constexpr auto func = [is_first = true] () mutable {
+      if (is_first) {
+        is_first = false;
+        return real_t{-1};
+      } else {
+        return real_t{1};
+      }
+    };
+
+    if constexpr (Node::size == 1) {
+      expect(eq(Node{value_t{}}.value(), value_t{}));
+      expect(eq(Node{func}.value(), value_t{-1}));
+    } else {
+      [&] {
+        Node target{value_t{}};
+        expect(eq(target.value().front(), real_t{}));
+        expect(eq(target.value().back(), real_t{}));
+      }();
+
+      [func] {
+        Node target{func};
+        expect(eq(target.value().front(), real_t{-1}));
+        expect(eq(target.value().back(), real_t{1}));
+      }();
+    }
+  } | test_targets{};
 }

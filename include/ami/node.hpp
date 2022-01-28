@@ -3,7 +3,6 @@
 #include <array>
 #include <concepts>
 #include <cstddef>
-#include <random>
 #include <type_traits>
 
 namespace ami {
@@ -21,6 +20,32 @@ namespace ami {
 
     // Static Public Members
     static constexpr size_type size = Size;
+
+    // Constructor
+    node() = default;
+
+    explicit node(value_type value) noexcept requires (size == 1)
+      : value_{value} {}
+
+    explicit node(const value_type& value) noexcept requires (size > 1)
+      : value_{value} {}
+
+    explicit node(value_type&& value) noexcept requires (size > 1)
+      : value_{value} {}
+
+    template <std::invocable Func>
+    requires std::constructible_from<real_type, std::invoke_result_t<Func>> &&
+             (size == 1)
+    explicit node(Func func) noexcept(noexcept(func()))
+      : value_ { func() } {}
+
+    template <std::invocable Func>
+    requires std::constructible_from<real_type, std::invoke_result_t<Func>> &&
+             (size > 1)
+    explicit node(Func func) noexcept(noexcept(func()))
+      : value_ { [func]<std::size_t... I>(std::index_sequence<I...>) mutable {
+          return value_type{(static_cast<void>(I), func())...};
+        }(std::make_index_sequence<size>{}) } {}
 
     // Getter
     constexpr value_type value() const& noexcept requires (size == 1) {
