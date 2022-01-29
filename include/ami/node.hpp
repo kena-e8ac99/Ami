@@ -16,8 +16,7 @@ namespace ami {
     // Public Types
     using size_type     = std::size_t;
     using real_type     = RealType;
-    using value_type    =
-        std::conditional_t<Size == 1, real_type, std::array<RealType, Size>>;
+    using value_type    = std::array<RealType, Size>;
     using forward_type  = real_type;
     using backward_type = value_type;
 
@@ -27,24 +26,12 @@ namespace ami {
     // Constructor
     node() = default;
 
-    explicit node(value_type value) noexcept requires (size == 1)
-      : value_{value} {}
+    explicit node(const value_type& value) noexcept : value_{value} {}
 
-    explicit node(const value_type& value) noexcept requires (size > 1)
-      : value_{value} {}
-
-    explicit node(value_type&& value) noexcept requires (size > 1)
-      : value_{value} {}
+    explicit node(value_type&& value) noexcept : value_{value} {}
 
     template <std::invocable Func>
-    requires std::constructible_from<real_type, std::invoke_result_t<Func>> &&
-             (size == 1)
-    explicit node(Func func) noexcept(noexcept(func()))
-      : value_ { func() } {}
-
-    template <std::invocable Func>
-    requires std::constructible_from<real_type, std::invoke_result_t<Func>> &&
-             (size > 1)
+    requires std::constructible_from<real_type, std::invoke_result_t<Func>>
     explicit node(Func func) noexcept(noexcept(func()))
       : value_ { [func]<std::size_t... I>(std::index_sequence<I...>) mutable {
           return value_type{(static_cast<void>(I), func())...};
@@ -52,30 +39,15 @@ namespace ami {
 
     // Public Methods
     template <execution_policy auto P = std::execution::seq>
-    requires (size == 1)
-    constexpr real_type forward(real_type input) const noexcept {
-      return input * value_;
-    }
-
-    template <execution_policy auto P = std::execution::seq>
-    requires (size > 1)
     constexpr real_type forward(
         const std::ranges::forward_range auto& input) const {
       return utility::transform_reduce<P>(value_, input, real_type{});
     }
 
     // Getter
-    constexpr value_type value() const& noexcept requires (size == 1) {
-      return value_;
-    }
+    constexpr const value_type& value() const& noexcept { return value_; }
 
-    constexpr const value_type& value() const& noexcept requires (size == 2) {
-      return value_;
-    }
-
-    constexpr value_type value() && noexcept requires (size == 2) {
-      return std::move(value_);
-    }
+    constexpr value_type value() && noexcept { return std::move(value_); }
 
   private:
     // Private Members
