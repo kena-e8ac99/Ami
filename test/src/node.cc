@@ -6,6 +6,7 @@
 #include <execution>
 #include <tuple>
 #include <type_traits>
+#include <vector>
 #include <utility>
 
 #include "boost/ut.hpp"
@@ -78,6 +79,19 @@ int main() {
       Node target{value_t{}};
       expect(eq(target.value().front(), real_t{}));
       expect(eq(target.value().back(), real_t{}));
+    }();
+
+    [&] {
+      std::vector<real_t> input{real_t{-1}};
+      if constexpr (node_t::size > 1) {
+        input.emplace_back(real_t{1});
+      }
+
+      Node target{input};
+      expect(eq(target.value().front(), real_t{-1}));
+      if constexpr (node_t::size > 1) {
+        expect(eq(target.value().back(), real_t{1}));
+      }
     }();
 
     [func] {

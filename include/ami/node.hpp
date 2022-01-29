@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <concepts>
 #include <cstddef>
@@ -29,6 +30,15 @@ namespace ami {
     explicit node(const value_type& value) noexcept : value_{value} {}
 
     explicit node(value_type&& value) noexcept : value_{value} {}
+
+    template <std::ranges::input_range R>
+    requires (!std::same_as<std::remove_cvref_t<R>, value_type>)
+    explicit constexpr node(const R& value)
+      : value_{[&]{
+          value_type result{};
+          std::ranges::copy(value, std::ranges::begin(result));
+          return result;
+        }()} {}
 
     template <std::invocable Func>
     requires std::constructible_from<real_type, std::invoke_result_t<Func>>
