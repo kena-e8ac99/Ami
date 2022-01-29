@@ -7,6 +7,7 @@
 #include <type_traits>
 
 #include "ami/concepts/execution_policy.hpp"
+#include "ami/utility/atomic_operation.hpp"
 #include "ami/utility/parallel_algorithm.hpp"
 
 namespace ami {
@@ -52,6 +53,14 @@ namespace ami {
     constexpr real_type forward(
         const std::ranges::forward_range auto& input) const {
       return utility::transform_reduce<P>(value_, input, real_type{});
+    }
+
+    template <execution_policy auto P = std::execution::seq>
+    constexpr void backward(real_type delta, backward_type& result) const {
+      utility::for_each<P>(std::ranges::iota_view{size_type{}, size},
+          [&, delta](auto i) {
+            utility::fetch_add<P>(result[i], delta * value_[i]);
+          });
     }
 
     // Getter

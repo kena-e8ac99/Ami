@@ -113,4 +113,17 @@ int main() {
     } | policies ;
   } | std::tuple{node<float, 1>{{0.5f}}, node<float, 2>{{-0.5f, 1.0f}},
                  node<double, 1>{{0.5}}, node<double, 2>{{-0.5, 1.0}}};
+
+  "backward"_test = [&]<class Node>(Node&& src) {
+    should("same result on each execution policy") = [&]<class Policy> {
+      using node_t = std::remove_cvref_t<Node>;
+
+      typename node_t::backward_type value{};
+      src.template backward<Policy{}>(-1, value);
+
+      expect(eq(value.front(), -1 * src.value().front()));
+      expect(eq(value.back(), -1 * src.value().back()));
+    } | policies ;
+  }| std::tuple{node<float, 1>{{0.5f}}, node<float, 2>{{-0.5f, 1.0f}},
+                 node<double, 1>{{0.5}}, node<double, 2>{{-0.5, 1.0}}};
 }
