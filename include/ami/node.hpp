@@ -27,9 +27,9 @@ namespace ami {
     // Constructor
     node() = default;
 
-    explicit node(const value_type& value) noexcept : value_{value} {}
+    explicit constexpr node(const value_type& value) noexcept : value_{value} {}
 
-    explicit node(value_type&& value) noexcept : value_{value} {}
+    explicit constexpr node(value_type&& value) noexcept : value_{value} {}
 
     template <std::ranges::input_range R>
     requires (!std::same_as<std::remove_cvref_t<R>, value_type>)
@@ -42,7 +42,7 @@ namespace ami {
 
     template <std::invocable Func>
     requires std::constructible_from<real_type, std::invoke_result_t<Func>>
-    explicit node(Func func) noexcept(noexcept(func()))
+    explicit constexpr node(Func func) noexcept(noexcept(func()))
       : value_ { [func]<std::size_t... I>(std::index_sequence<I...>) mutable {
           return value_type{(static_cast<void>(I), func())...};
         }(std::make_index_sequence<size>{}) } {}
