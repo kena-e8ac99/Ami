@@ -5,6 +5,9 @@
 #include <cstddef>
 #include <type_traits>
 
+#include "ami/concepts/execution_policy.hpp"
+#include "ami/utility/parallel_algorithm.hpp"
+
 namespace ami {
   template<std::floating_point RealType, std::size_t Size>
   requires (Size > 0)
@@ -46,6 +49,20 @@ namespace ami {
       : value_ { [func]<std::size_t... I>(std::index_sequence<I...>) mutable {
           return value_type{(static_cast<void>(I), func())...};
         }(std::make_index_sequence<size>{}) } {}
+
+    // Public Methods
+    template <execution_policy auto P = std::execution::seq>
+    requires (size == 1)
+    constexpr real_type forward(real_type input) const noexcept {
+      return input * value_;
+    }
+
+    template <execution_policy auto P = std::execution::seq>
+    requires (size > 1)
+    constexpr real_type forward(
+        const std::ranges::forward_range auto& input) const {
+      return utility::transform_reduce<P>(value_, input, real_type{});
+    }
 
     // Getter
     constexpr value_type value() const& noexcept requires (size == 1) {
