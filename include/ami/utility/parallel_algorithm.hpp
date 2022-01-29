@@ -10,6 +10,18 @@
 namespace ami::utility {
 
   template <execution_policy auto Policy,
+            std::ranges::forward_range R,
+            std::indirectly_unary_invocable<std::ranges::iterator_t<R>> F>
+  inline constexpr void for_each(R&& r, F f) {
+    if constexpr (sequenced_policy<Policy>) {
+      std::ranges::for_each(std::forward<R>(r), std::move(f));
+    } else {
+      std::for_each(
+          Policy, std::ranges::begin(r), std::ranges::end(r), std::move(f));
+    }
+  }
+
+  template <execution_policy auto Policy,
             std::ranges::forward_range R1, std::ranges::forward_range R2,
             std::common_with<std::ranges::range_value_t<R1>> T>
   requires std::common_with<T, std::ranges::range_value_t<R2>>
