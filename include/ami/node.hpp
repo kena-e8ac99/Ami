@@ -30,7 +30,8 @@ namespace ami {
 
     explicit constexpr node(const value_type& value) noexcept : value_{value} {}
 
-    explicit constexpr node(value_type&& value) noexcept : value_{value} {}
+    explicit constexpr node(value_type&& value) noexcept
+      : value_{std::move(value)} {}
 
     template <std::ranges::input_range R>
     requires (!std::same_as<std::remove_cvref_t<R>, value_type>)
