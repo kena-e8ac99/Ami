@@ -21,6 +21,8 @@ jobs:
 
       - run:
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 110 --slave /usr/bin/g++ g++ /usr/bin/g++-11 --slave /usr/bin/gcov gcov /usr/bin/gcov-11
+      - run:
+          sudo apt install libtbb-dev
 
       - uses: actions/setup-python@v1
 
@@ -31,9 +33,11 @@ jobs:
           options: --verbose
 
       - run: |
-          pip install gcovr
-          gcovr -e ".*ut\.hpp" --xml-pretty -o coverage.xml
+          sudo apt install lcov
+          mkdir coverage
+          lcov -c -d . -o coverage/lcov.info
+          lcov -r coverage/lcov.info "/usr*" "*test/lib/ut*" -o coverage/lcov.info
 
-      - uses: codecov/codecov-action@v2
+      - uses: coverallsapp/github-action@1.1.3
         with:
-          file: coverage.xml
+          github-token: ${{ secrets.GITHUB_TOKEN }}
