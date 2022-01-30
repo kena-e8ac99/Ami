@@ -1,4 +1,4 @@
-#include "ami/node.hpp"
+#include "ami/layer/component/node.hpp"
 
 #include <array>
 #include <concepts>
