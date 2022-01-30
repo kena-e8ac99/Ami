@@ -69,7 +69,7 @@ namespace ami {
 
     template <execution_policy auto P = std::execution::seq>
     constexpr void backward(real_type delta, backward_type& result) const {
-      utility::for_each<P>(std::ranges::iota_view{size_type{}, size},
+      utility::for_each<P>(std::views::iota(size_type{}, size),
           [&, delta](auto i) {
             utility::fetch_add<P>(result[i], delta * value_[i]);
           });
