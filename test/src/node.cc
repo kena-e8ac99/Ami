@@ -23,15 +23,6 @@ consteval void type_check() {
       typename node_t::backward_type, std::array<RealType, I>>);
 }
 
-template <class Node, std::floating_point auto Value>
-constexpr auto make_input() {
-  using node_t = std::remove_cvref_t<Node>;
-  return []<std::size_t... I>(std::index_sequence<I...>) {
-    return
-      std::array{(static_cast<void>(I), typename node_t::real_type{Value})...};
-  }(std::make_index_sequence<node_t::size>{});
-}
-
 int main() {
   using namespace boost::ut;
   using namespace ami;
@@ -107,9 +98,10 @@ int main() {
 
   "forward"_test = [&]<class Node>(Node&& src) {
     should("same result on each execution policy") = [&]<class Policy> {
-      const auto value =
-          src.template forward<Policy{}>(make_input<Node, 1.0>());
-      expect(eq(value, typename std::remove_cvref_t<Node>::real_type{0.5}));
+      using real_t = typename std::remove_cvref_t<Node>::real_type;
+      constexpr std::array input{real_t{1}, real_t{1}};
+      const auto value = src.template forward<Policy{}>(input);
+      expect(eq(value, real_t{0.5}));
     } | policies ;
   } | std::tuple{node<float, 1>{{0.5f}}, node<float, 2>{{-0.5f, 1.0f}},
                  node<double, 1>{{0.5}}, node<double, 2>{{-0.5, 1.0}}};
@@ -133,8 +125,9 @@ int main() {
       using real_t = typename node_t::real_type;
 
       typename node_t::value_type value{};
-      node_t::template calc_gradient<Policy{}>(
-          make_input<Node, 1.0>(), real_t{0.5}, value);
+      constexpr std::array input{real_t{1}, real_t{1}};
+
+      node_t::template calc_gradient<Policy{}>(input, real_t{0.5}, value);
 
       expect(eq(value.front(), real_t{0.5}));
       expect(eq(value.back(), real_t{0.5}));
@@ -152,7 +145,8 @@ int main() {
 
       node_t src{};
 
-      constexpr auto gradient = make_input<Node, 1.0>();
+      std::array<real_t, node_t::size> gradient{real_t{1}};
+      gradient.back() = real_t{1};
       std::vector optimizers{node_t::size, optimizer};
 
       src.template update<Policy{}>(optimizers, gradient);
