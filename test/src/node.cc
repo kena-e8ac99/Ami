@@ -141,4 +141,25 @@ int main() {
     } | policies ;
   }| test_targets{};
 
+  constexpr auto optimizer = [](auto& x, auto y) {
+    x += y;
+  };
+
+  "update"_test = [&]<class Node> {
+    should("same result on each execution policy") = [&]<class Policy> {
+      using node_t = std::remove_cvref_t<Node>;
+      using real_t = typename node_t::real_type;
+
+      node_t src{};
+
+      constexpr auto gradient = make_input<Node, 1.0>();
+      std::vector optimizers{node_t::size, optimizer};
+
+      src.template update<Policy{}>(optimizers, gradient);
+
+      expect(eq(src.value().front(), real_t{1}));
+      expect(eq(src.value().back(), real_t{1}));
+    } | policies ;
+  }| test_targets{};
+
 }

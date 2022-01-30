@@ -75,6 +75,13 @@ namespace ami {
           });
     }
 
+    template <execution_policy auto P = std::execution::seq, class Optimizers>
+    constexpr void update(Optimizers&& optimizers, const value_type& gradient) {
+      utility::for_each<P>(std::views::iota(size_type{}, size), [&](auto i) {
+            optimizers[i](value_[i], gradient[i]);
+          });
+    }
+
     // Getter
     constexpr const value_type& value() const& noexcept { return value_; }
 
