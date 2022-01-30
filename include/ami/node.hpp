@@ -49,6 +49,17 @@ namespace ami {
           return value_type{(static_cast<void>(I), func())...};
         }(std::make_index_sequence<size>{}) } {}
 
+    // Public Static Methods
+    template <execution_policy auto P = std::execution::seq>
+    static constexpr void calc_gradient(
+        const std::ranges::forward_range auto& input, real_type delta,
+        value_type& result) {
+      utility::for_each<P>(std::views::iota(size_type{}, size),
+          [&, delta](auto i) {
+            utility::fetch_add<P>(result[i], delta * input[i]);
+          });
+    }
+
     // Public Methods
     template <execution_policy auto P = std::execution::seq>
     constexpr real_type forward(

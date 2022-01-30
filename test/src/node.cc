@@ -126,4 +126,19 @@ int main() {
     } | policies ;
   }| std::tuple{node<float, 1>{{0.5f}}, node<float, 2>{{-0.5f, 1.0f}},
                  node<double, 1>{{0.5}}, node<double, 2>{{-0.5, 1.0}}};
+
+  "calc_gradient"_test = [&]<class Node> {
+    should("same result on each execution policy") = [&]<class Policy> {
+      using node_t = std::remove_cvref_t<Node>;
+      using real_t = typename node_t::real_type;
+
+      typename node_t::value_type value{};
+      node_t::template calc_gradient<Policy{}>(
+          make_input<Node, 1.0>(), real_t{0.5}, value);
+
+      expect(eq(value.front(), real_t{0.5}));
+      expect(eq(value.back(), real_t{0.5}));
+    } | policies ;
+  }| test_targets{};
+
 }
