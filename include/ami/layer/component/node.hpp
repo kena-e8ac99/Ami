@@ -7,6 +7,7 @@
 #include <type_traits>
 
 #include "ami/concepts/execution_policy.hpp"
+#include "ami/concepts/optimizer.hpp"
 #include "ami/utility/atomic_operation.hpp"
 #include "ami/utility/parallel_algorithm.hpp"
 
@@ -21,6 +22,9 @@ namespace ami {
     using value_type    = std::array<RealType, Size>;
     using forward_type  = real_type;
     using backward_type = value_type;
+
+    template <optimizer Optimizer>
+    using optimizer_type = std::array<Optimizer, Size>;
 
     // Static Public Members
     static constexpr size_type size = Size;
@@ -72,10 +76,11 @@ namespace ami {
           });
     }
 
-    template <execution_policy auto P = std::execution::seq, class Optimizers>
-    constexpr void update(Optimizers&& optimizers, const value_type& gradient) {
+    template <execution_policy auto P = std::execution::seq, class Optimizer>
+    constexpr void update(
+        optimizer_type<Optimizer>& optimizer, const value_type& gradient) {
       utility::for_each<P>(std::views::iota(size_type{}, size), [&](auto i) {
-            optimizers[i](value_[i], gradient[i]);
+            optimizer[i](value_[i], gradient[i]);
           });
     }
 
