@@ -15,6 +15,11 @@ namespace ami {
     template <optimizer Optimizer>
     using optimizer_type = Optimizer;
 
+    // Constructor
+    bias() = default;
+
+    explicit constexpr bias(real_type value) noexcept : value_{value} {}
+
     // Getter
     constexpr real_type value() const noexcept { return value_; }
 

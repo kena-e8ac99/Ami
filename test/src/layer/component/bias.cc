@@ -36,4 +36,11 @@ int main() {
       expect(eq(value, typename Bias::real_type{}));
     }();
   } | target_t{};
+
+  "constructor"_test = []<class Bias> {
+    constexpr auto value = typename Bias::real_type{1};
+    Bias src{value};
+
+    expect(eq(src.value(), value));
+  } | target_t{};
 }
