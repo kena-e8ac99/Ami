@@ -22,4 +22,18 @@ int main() {
     static_assert(std::same_as<
         typename bias_t::template optimizer_type<optimizer_t>, optimizer_t>);
   } | std::tuple<float, double>{};
+
+  using target_t = std::tuple<bias<float>, bias<double>>;
+
+  "getter"_test = []<class Bias>(Bias src) {
+    expect(eq(src.value(), typename Bias::real_type{}));
+
+    [src = src] {
+      expect(eq(src.value(), typename Bias::real_type{}));
+    }();
+
+    [value = std::move(src).value()] {
+      expect(eq(value, typename Bias::real_type{}));
+    }();
+  } | target_t{};
 }

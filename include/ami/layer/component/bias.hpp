@@ -14,5 +14,12 @@ namespace ami {
 
     template <optimizer Optimizer>
     using optimizer_type = Optimizer;
+
+    // Getter
+    constexpr real_type value() const noexcept { return value_; }
+
+  private:
+    // Private Members
+    real_type value_{};
   };
 }
