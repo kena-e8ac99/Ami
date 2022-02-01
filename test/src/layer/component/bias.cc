@@ -56,4 +56,14 @@ int main() {
       expect(eq(value, real_t{1}));
     } | policies;
   } | target_t{};
+
+  "update"_test = [&]<class Bias>(Bias src) {
+    using real_t = typename Bias::real_type;
+
+    should("same result on each policy") = [&, src]<class Policy>() mutable {
+      typename Bias::template optimizer_type<optimizer_t> optimizers{};
+      src.update(optimizers, real_t{1});
+      expect(eq(src.value(), real_t{1}));
+    } | policies;
+  } | target_t{};
 }

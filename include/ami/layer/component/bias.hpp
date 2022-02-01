@@ -28,6 +28,13 @@ namespace ami {
       utility::fetch_add<P>(result, delta);
     }
 
+    // Public Methods
+    template <class Optimizer>
+    constexpr void update(
+        optimizer_type<Optimizer>& optimizer, real_type gradient) {
+      optimizer(value_, gradient);
+    }
+
     // Getter
     constexpr real_type value() const noexcept { return value_; }
 
