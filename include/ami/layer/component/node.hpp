@@ -35,12 +35,9 @@ namespace ami {
 
     template <std::ranges::input_range R>
     requires (!std::same_as<std::remove_cvref_t<R>, value_type>)
-    explicit constexpr node(const R& value)
-      : value_{[&]{
-          value_type result{};
-          std::ranges::copy(value, std::ranges::begin(result));
-          return result;
-        }()} {}
+    explicit constexpr node(const R& value) {
+      std::ranges::copy(value, value_.begin());
+    }
 
     template <std::invocable Func>
     requires std::constructible_from<real_type, std::invoke_result_t<Func>>
