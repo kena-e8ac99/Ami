@@ -1,6 +1,7 @@
 #include "ami/layer/component/bias.hpp"
 
 #include <concepts>
+#include <execution>
 #include <tuple>
 
 #include <boost/ut.hpp>
@@ -42,5 +43,17 @@ int main() {
     Bias src{value};
 
     expect(eq(src.value(), value));
+  } | target_t{};
+
+  using namespace std::execution;
+  constexpr std::tuple policies{seq, par, par_unseq, unseq};
+
+  "calc_gradient"_test = [&]<class Bias>(Bias src) {
+    using real_t = typename Bias::real_type;
+    should("same result on each policy") = [&]<class Policy> {
+      real_t value{};
+      src.template calc_gradient<Policy{}>(real_t{1}, value);
+      expect(eq(value, real_t{1}));
+    } | policies;
   } | target_t{};
 }
