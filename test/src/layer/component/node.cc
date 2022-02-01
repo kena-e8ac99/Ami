@@ -11,6 +11,12 @@
 
 #include "boost/ut.hpp"
 
+constexpr auto optimizer = [](auto& x, auto y) {
+  x += y;
+};
+
+using optimizer_t = std::remove_cvref_t<decltype(optimizer)>;
+
 template <std::floating_point RealType, std::size_t I>
 consteval void type_check() {
   using node_t = ami::node<RealType, I>;
@@ -21,6 +27,9 @@ consteval void type_check() {
   static_assert(std::same_as<typename node_t::forward_type, RealType>);
   static_assert(std::same_as<
       typename node_t::backward_type, std::array<RealType, I>>);
+  static_assert(std::same_as<
+      typename node_t::template optimizer_type<optimizer_t>,
+      std::array<optimizer_t, node_t::size>>);
 }
 
 int main() {
@@ -153,10 +162,6 @@ int main() {
     } | policies ;
   }| test_targets{};
 
-  constexpr auto optimizer = [](auto& x, auto y) {
-    x += y;
-  };
-
   "update"_test = [&]<class Node> {
     should("same result on each execution policy") = [&]<class Policy> {
       using node_t = std::remove_cvref_t<Node>;
@@ -166,7 +171,7 @@ int main() {
 
       std::array<real_t, node_t::size> gradient{real_t{1}};
       gradient.back() = real_t{1};
-      std::vector optimizers{node_t::size, optimizer};
+      typename node_t::template optimizer_type<optimizer_t> optimizers{};
 
       src.template update<Policy{}>(optimizers, gradient);
 

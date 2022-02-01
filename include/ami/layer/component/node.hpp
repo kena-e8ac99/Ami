@@ -7,6 +7,7 @@
 #include <type_traits>
 
 #include "ami/concepts/execution_policy.hpp"
+#include "ami/concepts/optimizer.hpp"
 #include "ami/utility/atomic_operation.hpp"
 #include "ami/utility/parallel_algorithm.hpp"
 
@@ -22,6 +23,9 @@ namespace ami {
     using forward_type  = real_type;
     using backward_type = value_type;
 
+    template <optimizer Optimizer>
+    using optimizer_type = std::array<Optimizer, Size>;
+
     // Static Public Members
     static constexpr size_type size = Size;
 
@@ -35,12 +39,9 @@ namespace ami {
 
     template <std::ranges::input_range R>
     requires (!std::same_as<std::remove_cvref_t<R>, value_type>)
-    explicit constexpr node(const R& value)
-      : value_{[&]{
-          value_type result{};
-          std::ranges::copy(value, std::ranges::begin(result));
-          return result;
-        }()} {}
+    explicit constexpr node(const R& value) {
+      std::ranges::copy(value, value_.begin());
+    }
 
     template <std::invocable Func>
     requires std::constructible_from<real_type, std::invoke_result_t<Func>>
@@ -75,10 +76,11 @@ namespace ami {
           });
     }
 
-    template <execution_policy auto P = std::execution::seq, class Optimizers>
-    constexpr void update(Optimizers&& optimizers, const value_type& gradient) {
+    template <execution_policy auto P = std::execution::seq, class Optimizer>
+    constexpr void update(
+        optimizer_type<Optimizer>& optimizer, const value_type& gradient) {
       utility::for_each<P>(std::views::iota(size_type{}, size), [&](auto i) {
-            optimizers[i](value_[i], gradient[i]);
+            optimizer[i](value_[i], gradient[i]);
           });
     }
 
