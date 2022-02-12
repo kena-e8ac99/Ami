@@ -78,4 +78,14 @@ int main() {
 
     check_value(std::move(layer), value);
   } | target_t{};
+
+  "construcotr"_test = []<class Layer> {
+    using layer_t = std::remove_cvref_t<Layer>;
+    using value_t = typename layer_t::value_type;
+
+    [] {
+      Layer layer{value_t{}};
+      check_value(layer, value_t{});
+    }();
+  } | target_t{};
 }

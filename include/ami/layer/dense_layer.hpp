@@ -34,6 +34,32 @@ namespace ami {
       // Constructor
       type() = default;
 
+      explicit constexpr type(const value_type& value)
+          : nodes_{[&value = value.first]<std::size_t... I>(
+                std::index_sequence<I...>) {
+              return std::array<node_type, output_size>{
+                  (static_cast<void>(I), node_type{(value.first)[I]})...};
+            }(std::make_index_sequence<output_size>{})},
+            bias_{[&value = value.second]<std::size_t... I>(
+                std::index_sequence<I...>) {
+              return std::array<bias_type, output_size>{
+                  (static_cast<void>(I), bias_type{(value.second)[I]})...};
+            }(std::make_index_sequence<output_size>{})}
+      {}
+
+      explicit constexpr type(value_type&& value)
+          : nodes_{[value = std::move(value.first)]<std::size_t... I>(
+                std::index_sequence<I...>) {
+              return std::array<node_type, output_size>{
+                  (static_cast<void>(I), node_type{std::move(value[I])})...};
+            }(std::make_index_sequence<output_size>{})},
+            bias_{[value = std::move(value.second)]<std::size_t... I>(
+                std::index_sequence<I...>) {
+              return std::array<bias_type, output_size>{
+                  (static_cast<void>(I), bias_type{std::move(value[I])})...};
+            }(std::make_index_sequence<output_size>{})}
+      {}
+
       // Getter
       constexpr auto value() const& noexcept {
         auto first = [&]<std::size_t... I>(std::index_sequence<I...>) {
