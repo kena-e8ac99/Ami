@@ -4,6 +4,7 @@
 #include <array>
 #include <concepts>
 #include <cstddef>
+#include <span>
 #include <type_traits>
 
 #include "ami/concepts/execution_policy.hpp"
@@ -85,7 +86,9 @@ namespace ami {
     }
 
     // Getter
-    constexpr const value_type& value() const& noexcept { return value_; }
+    constexpr value_type value() const& noexcept {
+      return value_;
+    }
 
     constexpr value_type value() && noexcept { return std::move(value_); }
 
