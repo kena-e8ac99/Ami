@@ -26,6 +26,8 @@ namespace ami {
       using bias_type  = bias<RealType>;
       using input_type = std::array<real_type, InputSize>;
       using forward_type = std::array<real_type, OutputSize>;
+      using backward_type = typename node_type::backward_type;
+      using delta_type = forward_type;
       using value_type = std::pair<
           std::array<typename node_type::value_type, OutputSize>,
           std::array<real_type, OutputSize>>;
@@ -71,6 +73,14 @@ namespace ami {
             [&input](const auto& node, const auto& bias) {
               return node.template forward<P>(input) + bias.value();
             });
+        return result;
+      }
+
+      template <execution_policy auto P = std::execution::seq>
+      constexpr backward_type backward(const delta_type& delta) const {
+        backward_type result{};
+        utility::for_each<P>(std::views::iota(size_type{}, output_size),
+            [&](auto i) { nodes_[i].template backward(delta[i], result); });
         return result;
       }
 

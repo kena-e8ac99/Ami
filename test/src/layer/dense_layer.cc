@@ -88,4 +88,13 @@ int main() {
       [[maybe_unused]]auto result = layer.template forward<Policy{}>(input);
     } | policies;
   } | target_t{};
+
+  //TODO: Implement test
+  "backward"_test = [&]<class Layer>(Layer&& layer) {
+    using layer_t = std::remove_cvref_t<Layer>;
+    typename layer_t::delta_type delta{};
+    should("same result on each execution policy") = [&]<class Policy> {
+      [[maybe_unused]]auto result = layer.template backward<Policy{}>(delta);
+    } | policies;
+  } | target_t{};
 }
