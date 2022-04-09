@@ -21,6 +21,7 @@ namespace ami {
     using size_type     = std::size_t;
     using real_type     = RealType;
     using value_type    = std::array<RealType, Size>;
+    using input_type    = value_type;
     using forward_type  = real_type;
     using backward_type = value_type;
 
@@ -38,12 +39,6 @@ namespace ami {
     explicit constexpr node(value_type&& value) noexcept
       : value_{std::move(value)} {}
 
-    template <std::ranges::input_range R>
-    requires (!std::same_as<std::remove_cvref_t<R>, value_type>)
-    explicit constexpr node(const R& value) {
-      std::ranges::copy(value, value_.begin());
-    }
-
     template <std::invocable Func>
     requires std::constructible_from<real_type, std::invoke_result_t<Func>>
     explicit constexpr node(Func func) noexcept(noexcept(func()))
@@ -54,8 +49,7 @@ namespace ami {
     // Public Static Methods
     template <execution_policy auto P = std::execution::seq>
     static constexpr void calc_gradient(
-        const std::ranges::forward_range auto& input, real_type delta,
-        value_type& result) {
+        const input_type& input, real_type delta, value_type& result) {
       utility::for_each<P>(std::views::iota(size_type{}, size),
           [&, delta](auto i) {
             utility::fetch_add<P>(result[i], delta * input[i]);
@@ -64,8 +58,7 @@ namespace ami {
 
     // Public Methods
     template <execution_policy auto P = std::execution::seq>
-    constexpr real_type forward(
-        const std::ranges::forward_range auto& input) const {
+    constexpr real_type forward(const input_type& input) const {
       return utility::transform_reduce<P>(value_, input, real_type{});
     }
 
