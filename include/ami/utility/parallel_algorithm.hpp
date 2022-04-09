@@ -21,6 +21,23 @@ namespace ami::utility {
     }
   }
 
+  template <execution_policy auto Policy, std::ranges::forward_range R,
+            std::weakly_incrementable O, std::copy_constructible F>
+  requires std::indirectly_writable<O,
+      std::indirect_result_t<F, std::ranges::iterator_t<R>>>
+  inline constexpr O transform(R&& r, O result, F f) {
+    if constexpr (sequenced_policy<Policy>) {
+      return std::transform(
+          std::ranges::begin(r), std::ranges::end(r), std::move(result),
+          std::move(f));
+    }
+    else {
+      return std::transform(
+          Policy, std::ranges::begin(r), std::ranges::end(r), std::move(result),
+          std::move(f));
+    }
+  }
+
   template <execution_policy auto Policy,
             std::ranges::forward_range R1, std::ranges::forward_range R2,
             std::weakly_incrementable O, std::copy_constructible F>
