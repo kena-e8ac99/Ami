@@ -4,7 +4,6 @@
 #include <array>
 #include <concepts>
 #include <cstddef>
-#include <span>
 #include <type_traits>
 
 #include "ami/concepts/execution_policy.hpp"
