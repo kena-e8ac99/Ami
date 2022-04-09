@@ -5,7 +5,6 @@
 #include <cstddef>
 #include <utility>
 
-#include "ami/concepts/activation_function.hpp"
 #include "ami/concepts/execution_policy.hpp"
 #include "ami/layer/component/bias.hpp"
 #include "ami/layer/component/node.hpp"
@@ -13,7 +12,7 @@
 
 namespace ami {
 
-  template <std::size_t OutputSize, activation_function Func>
+  template <std::size_t OutputSize>
   requires (OutputSize > 0)
   struct dense_layer final {
     template <std::floating_point RealType, std::size_t InputSize>
@@ -110,8 +109,7 @@ namespace ami {
   };
 
   template <std::floating_point RealType, std::size_t InputSize,
-            std::size_t OutputSize, activation_function Func>
+            std::size_t OutputSize>
   using dense_layer_t =
-      typename  dense_layer<OutputSize, Func>::template
-          type<RealType, InputSize>;
+      typename  dense_layer<OutputSize>::template type<RealType, InputSize>;
 }

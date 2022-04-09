@@ -7,22 +7,10 @@
 
 #include <boost/ut.hpp>
 
-struct func final {
-  template <std::floating_point RealType>
-  static constexpr RealType f(RealType value) {
-    return value * value;
-  }
-
-  template <std::floating_point RealType>
-  static constexpr RealType df(RealType value) {
-    return static_cast<RealType>(2) * value;
-  }
-};
-
 template <std::floating_point RealType, std::size_t InputSize,
           std::size_t OutputSize>
 consteval void type_check() {
-  using layer_t = ami::dense_layer_t<RealType, InputSize, OutputSize, func>;
+  using layer_t = ami::dense_layer_t<RealType, InputSize, OutputSize>;
   static_assert(std::same_as<typename layer_t::size_type, std::size_t>);
   static_assert(std::same_as<typename layer_t::real_type, RealType>);
   static_assert(std::same_as<typename layer_t::value_type,
@@ -53,10 +41,10 @@ int main() {
   using namespace std::execution;
 
   using target_t = std::tuple<
-      dense_layer_t<float, 1, 1, func>,  dense_layer_t<float, 1, 2, func>,
-      dense_layer_t<float, 2, 1, func>,  dense_layer_t<float, 2, 2, func>,
-      dense_layer_t<double, 1, 1, func>, dense_layer_t<double, 1, 2, func>,
-      dense_layer_t<double, 2, 1, func>, dense_layer_t<double, 2, 2, func>>;
+      dense_layer_t<float, 1, 1>,  dense_layer_t<float, 1, 2>,
+      dense_layer_t<float, 2, 1>,  dense_layer_t<float, 2, 2>,
+      dense_layer_t<double, 1, 1>, dense_layer_t<double, 1, 2>,
+      dense_layer_t<double, 2, 1>, dense_layer_t<double, 2, 2>>;
 
   "type check"_test = []<std::floating_point RealType>{
     type_check<RealType, 1, 1>();
