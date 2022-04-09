@@ -3,8 +3,11 @@
 #include <array>
 #include <concepts>
 #include <cstddef>
+#include <execution>
 
 #include "ami/concepts/activation_function.hpp"
+#include "ami/concepts/execution_policy.hpp"
+#include "ami/utility/parallel_algorithm.hpp"
 
 namespace ami {
 
@@ -23,6 +26,13 @@ namespace ami {
       static constexpr size_type input_size = Size;
       static constexpr size_type output_size = Size;
 
+      // Public Static Methods
+      template <execution_policy auto P = std::execution::seq>
+      static constexpr forward_type forward(const input_type& input) {
+        forward_type result{};
+        utility::transform<P>(input, result.begin(), F::template f<real_type>);
+        return result;
+      }
     };
   };
 
