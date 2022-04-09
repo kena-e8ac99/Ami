@@ -86,12 +86,6 @@ int main() {
       if constexpr (node_t::size > 1) {
         input.emplace_back(real_t{1});
       }
-
-      Node target{input};
-      expect(eq(target.value().front(), real_t{-1}));
-      if constexpr (node_t::size > 1) {
-        expect(eq(target.value().back(), real_t{1}));
-      }
     }();
 
     [func] {
@@ -107,18 +101,19 @@ int main() {
 
   "forward"_test = [&]<class Node>(Node&& src) {
     should("same result on each execution policy") = [&]<class Policy> {
-      using real_t = typename std::remove_cvref_t<Node>::real_type;
-      constexpr std::array input{real_t{1}, real_t{1}};
+      using node_t = std::remove_cvref_t<Node>;
+      using real_t = typename node_t::real_type;
+      constexpr auto size = node_t::size;
+      constexpr auto input = []() {
+        if constexpr (size == 1) {
+          return std::array{real_t{1}};
+        } else {
+          return std::array{real_t{1}, real_t{1}};
+        }
+      }();
       [&] {
         const auto value = src.template forward<Policy{}>(input);
         expect(eq(value, real_t{0.5}));
-      }();
-
-      [&] {
-        const auto view = std::views::transform(
-            input, [](auto i) { return i * 2; });
-        const auto value = src.template forward<Policy{}>(view);
-        expect(eq(value, real_t{1}));
       }();
     } | policies ;
   } | std::tuple{node<float, 1>{{0.5f}}, node<float, 2>{{-0.5f, 1.0f}},
@@ -141,23 +136,21 @@ int main() {
     should("same result on each execution policy") = [&]<class Policy> {
       using node_t = std::remove_cvref_t<Node>;
       using real_t = typename node_t::real_type;
+      constexpr auto size = node_t::size;
+      constexpr auto input = []() {
+        if constexpr (size == 1) {
+          return std::array{real_t{1}};
+        } else {
+          return std::array{real_t{1}, real_t{1}};
+        }
+      }();
 
       typename node_t::value_type value{};
-      constexpr std::array input{real_t{1}, real_t{1}};
 
       [&, value]() mutable {
         node_t::template calc_gradient<Policy{}>(input, real_t{0.5}, value);
         expect(eq(value.front(), real_t{0.5}));
         expect(eq(value.back(), real_t{0.5}));
-      }();
-
-      [&] {
-        const auto view = std::views::transform(
-            input, [](auto i) { return i * 2; });
-
-        node_t::template calc_gradient<Policy{}>(view, real_t{0.5}, value);
-        expect(eq(value.front(), real_t{1}));
-        expect(eq(value.back(), real_t{1}));
       }();
     } | policies ;
   }| test_targets{};
