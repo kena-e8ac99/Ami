@@ -50,6 +50,7 @@ void check_value(
 int main() {
   using namespace boost::ut;
   using namespace ami;
+  using namespace std::execution;
 
   using target_t = std::tuple<
       dense_layer_t<float, 1, 1, func>,  dense_layer_t<float, 1, 2, func>,
@@ -87,5 +88,16 @@ int main() {
       Layer layer{value_t{}};
       check_value(layer, value_t{});
     }();
+  } | target_t{};
+
+  constexpr std::tuple policies{seq, par, par_unseq, unseq};
+
+  //TODO: Implement test
+  "forward"_test = [&]<class Layer>(Layer&& layer) {
+    using layer_t = std::remove_cvref_t<Layer>;
+    typename layer_t::input_type input{};
+    should("same result on each execution policy") = [&]<class Policy> {
+      [[maybe_unused]]auto result = layer.template forward<Policy{}>(input);
+    } | policies;
   } | target_t{};
 }

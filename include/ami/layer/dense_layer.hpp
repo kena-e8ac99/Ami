@@ -6,8 +6,10 @@
 #include <utility>
 
 #include "ami/concepts/activation_function.hpp"
+#include "ami/concepts/execution_policy.hpp"
 #include "ami/layer/component/bias.hpp"
 #include "ami/layer/component/node.hpp"
+#include "ami/utility/parallel_algorithm.hpp"
 
 namespace ami {
 
@@ -23,6 +25,8 @@ namespace ami {
       using real_type  = RealType;
       using node_type  = node<RealType, InputSize>;
       using bias_type  = bias<RealType>;
+      using input_type = std::array<real_type, InputSize>;
+      using forward_type = std::array<real_type, OutputSize>;
       using value_type = std::pair<
           std::array<typename node_type::value_type, OutputSize>,
           std::array<real_type, OutputSize>>;
@@ -59,6 +63,17 @@ namespace ami {
                   (static_cast<void>(I), bias_type{std::move(value[I])})...};
             }(std::make_index_sequence<output_size>{})}
       {}
+
+      // Public Methods
+      template <execution_policy auto P = std::execution::seq>
+      constexpr forward_type forward(const input_type& input) const {
+        forward_type result{};
+        utility::transform<P>(nodes_, bias_, result.begin(),
+            [&input](const auto& node, const auto& bias) {
+              return node.template forward<P>(input) + bias.value();
+            });
+        return result;
+      }
 
       // Getter
       constexpr auto value() const& noexcept {
