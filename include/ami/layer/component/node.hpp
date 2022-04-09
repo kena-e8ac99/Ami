@@ -78,9 +78,7 @@ namespace ami {
     }
 
     // Getter
-    constexpr value_type value() const& noexcept {
-      return value_;
-    }
+    constexpr value_type value() const& noexcept { return value_; }
 
     constexpr value_type value() && noexcept { return std::move(value_); }
 
