@@ -21,6 +21,7 @@ namespace ami {
       using input_type = std::array<real_type, Size>;
       using forward_type = input_type;
       using backward_type = input_type;
+      using delta_type = input_type;
 
       // Public Static Members
       static constexpr size_type input_size = Size;
@@ -31,6 +32,15 @@ namespace ami {
       static constexpr forward_type forward(const input_type& input) {
         forward_type result{};
         utility::transform<P>(input, result.begin(), F::template f<real_type>);
+        return result;
+      }
+
+      template <execution_policy auto P = std::execution::seq>
+      static constexpr backward_type backward(
+          const input_type& input, const delta_type& delta) {
+        backward_type result{};
+        utility::transform<P>(input, delta, result.begin(),
+            [](auto&& input, auto&& delta) { return F::df(input) * delta; });
         return result;
       }
     };

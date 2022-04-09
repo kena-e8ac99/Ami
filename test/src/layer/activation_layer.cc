@@ -25,6 +25,8 @@ consteval void type_check() {
       typename layer_t::forward_type, std::array<RealType, I>>);
   static_assert(std::same_as<
       typename layer_t::backward_type, std::array<RealType, I>>);
+  static_assert(std::same_as<
+      typename layer_t::delta_type, std::array<RealType, I>>);
 }
 
 int main() {
@@ -49,6 +51,17 @@ int main() {
 
     should("same result on each policy") = [&]<class Policy>() {
       [[maybe_unused]] auto result = layer_t::template forward<Policy{}>(input);
+    } | policies;
+  } | test_target_t{};
+
+  "backward"_test = [&]<class Layer>() {
+    using layer_t = std::remove_cvref_t<Layer>;
+    typename layer_t::input_type input{};
+    typename layer_t::delta_type delta{};
+
+    should("same result on each policy") = [&]<class Policy>() {
+      [[maybe_unused]] auto result = layer_t::template backward<Policy{}>(
+          input, delta);
     } | policies;
   } | test_target_t{};
 }
