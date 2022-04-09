@@ -97,4 +97,15 @@ int main() {
       [[maybe_unused]]auto result = layer.template backward<Policy{}>(delta);
     } | policies;
   } | target_t{};
+
+  //TODO: Implement test
+  "calc_gradient"_test = [&]<class Layer>() {
+    using layer_t = std::remove_cvref_t<Layer>;
+    typename layer_t::input_type input{};
+    typename layer_t::delta_type delta{};
+    should("same result on each execution policy") = [&]<class Policy> {
+      typename layer_t::gradient_type result{};
+      layer_t::template calc_gradient<Policy{}>(input, delta, result);
+    } | policies;
+  } | target_t{};
 }

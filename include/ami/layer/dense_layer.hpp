@@ -24,13 +24,14 @@ namespace ami {
       using real_type  = RealType;
       using node_type  = node<RealType, InputSize>;
       using bias_type  = bias<RealType>;
+      using value_type = std::pair<
+          std::array<typename node_type::value_type, OutputSize>,
+          std::array<real_type, OutputSize>>;
       using input_type = std::array<real_type, InputSize>;
       using forward_type = std::array<real_type, OutputSize>;
       using backward_type = typename node_type::backward_type;
       using delta_type = forward_type;
-      using value_type = std::pair<
-          std::array<typename node_type::value_type, OutputSize>,
-          std::array<real_type, OutputSize>>;
+      using gradient_type = value_type;
 
       // Public Static Members
       static constexpr size_type input_size  = InputSize;
@@ -64,6 +65,19 @@ namespace ami {
                   (static_cast<void>(I), bias_type{std::move(value[I])})...};
             }(std::make_index_sequence<output_size>{})}
       {}
+
+      // Public Static Methods
+      template <execution_policy auto P = std::execution::seq>
+      static constexpr void calc_gradient(
+          const input_type& input, const delta_type& delta,
+          gradient_type& result) {
+        utility::for_each<P>(std::views::iota(size_type{}, output_size),
+            [&](auto i) {
+              node_type::template calc_gradient(
+                  input, delta[i], result.first[i]);
+              bias_type::template calc_gradient(delta[i], result.second[i]);
+            });
+      }
 
       // Public Methods
       template <execution_policy auto P = std::execution::seq>
