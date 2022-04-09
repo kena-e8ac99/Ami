@@ -7,6 +7,12 @@
 
 #include <boost/ut.hpp>
 
+constexpr auto optimizer = [](auto& x, auto y) {
+  x += y;
+};
+
+using optimizer_t = std::remove_cvref_t<decltype(optimizer)>;
+
 template <std::floating_point RealType, std::size_t InputSize,
           std::size_t OutputSize>
 consteval void type_check() {
@@ -106,6 +112,17 @@ int main() {
     should("same result on each execution policy") = [&]<class Policy> {
       typename layer_t::gradient_type result{};
       layer_t::template calc_gradient<Policy{}>(input, delta, result);
+    } | policies;
+  } | target_t{};
+
+  //TODO: Implement test
+  "update"_test = [&]<class Layer>() {
+    using layer_t = std::remove_cvref_t<Layer>;
+    typename layer_t::gradient_type gradient{};
+    typename layer_t::template optimizer_type<optimizer_t> optimizer{};
+    layer_t layer{};
+    should("same result on each execution policy") = [&]<class Policy> {
+        layer.template update<Policy{}>(optimizer, gradient);
     } | policies;
   } | target_t{};
 }

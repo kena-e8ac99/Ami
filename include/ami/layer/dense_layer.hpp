@@ -6,6 +6,7 @@
 #include <utility>
 
 #include "ami/concepts/execution_policy.hpp"
+#include "ami/concepts/optimizer.hpp"
 #include "ami/layer/component/bias.hpp"
 #include "ami/layer/component/node.hpp"
 #include "ami/utility/parallel_algorithm.hpp"
@@ -32,6 +33,12 @@ namespace ami {
       using backward_type = typename node_type::backward_type;
       using delta_type = forward_type;
       using gradient_type = value_type;
+
+      template <optimizer Optimizer>
+      using optimizer_type =
+          std::pair<std::array<typename node_type::template
+              optimizer_type<Optimizer>, OutputSize>,
+          std::array<Optimizer, OutputSize>>;
 
       // Public Static Members
       static constexpr size_type input_size  = InputSize;
@@ -96,6 +103,17 @@ namespace ami {
         utility::for_each<P>(std::views::iota(size_type{}, output_size),
             [&](auto i) { nodes_[i].template backward(delta[i], result); });
         return result;
+      }
+
+      template <execution_policy auto P = std::execution::seq, class Optimizer>
+      constexpr void update(
+          optimizer_type<Optimizer>& optimizer, const gradient_type& gradient) {
+        utility::for_each<P>(std::views::iota(size_type{}, output_size),
+            [&](auto i) {
+              nodes_[i].template update<P>(
+                  optimizer.first[i], gradient.first[i]);
+              bias_[i].update(optimizer.second[i], gradient.second[i]);
+            });
       }
 
       // Getter
