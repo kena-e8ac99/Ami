@@ -52,6 +52,17 @@ namespace ami {
             });
         return result;
       }
+
+      template <execution_policy auto P = std::execution::seq>
+      static backward_type backward(
+          const forward_type& forward, const delta_type& delta) {
+        backward_type result{};
+        utility::transform<P>(
+            forward, delta, result.begin(), [](auto&& forward, auto&& delta) {
+              return (forward == real_type{0}) ? forward : delta;
+            });
+        return result;
+      }
     };
   };
 
