@@ -1,5 +1,6 @@
 #include "ami/layer/dropout_layer.hpp"
 
+#include <random>
 #include <tuple>
 #include <utility>
 
@@ -21,9 +22,29 @@ consteval void type_check() {
 int main() {
   using namespace ami;
   using namespace boost::ut;
+  using namespace std::execution;
 
   "type_check"_test = []<class RealType>() {
     type_check<RealType, 1>();
     type_check<RealType, 2>();
   } | std::pair<float, double>{};
+
+  using test_target_t = std::tuple<
+      dropout_layer_t<float, 1, 0.5>, dropout_layer_t<float, 2, 0.5>,
+      dropout_layer_t<double, 1, 0.5>, dropout_layer_t<double, 2, 0.5>>;
+
+  constexpr std::tuple policies{seq, par, par_unseq, unseq};
+
+  std::default_random_engine engine{std::random_device{}()};
+
+  "forward"_test = [&]<class Layer>() {
+    using layer_t = std::remove_cvref_t<Layer>;
+    typename layer_t::input_type input{};
+
+    should("same result on each policy") = [&]<class Policy>() {
+      [[maybe_unused]] auto result =
+          layer_t::template forward<Policy{}>(input, engine);
+    } | policies;
+  } | test_target_t{};
+
 }
